@@ -362,7 +362,7 @@ a {
   /* No opacity. Black at 40% is grey, and there is no grey in this
      palette. Lightness comes from ordered screens and from punching
      holes in the cells — every pixel stays pure ink or pure paper. */
-  transform: translateX(var(--avoid-shift, 0));
+  transform: translate(var(--avoid-x, 0), var(--avoid-y, 0));
 }
 
 .shape[data-clash] {

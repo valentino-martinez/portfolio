@@ -47,7 +47,7 @@ const portrait = existsSync(MEDIA)
           rail and further left than the photograph, sitting behind
           everything as a piece of the page rather than on top of it. */}
       <span class="poster__edge" data-avoid aria-hidden="true">
-        <Sketch type="plane" width="min(40vw, 520px)" seed={17} />
+        <Sketch type="plane" width="min(22vw, 260px)" seed={17} />
       </span>
 
       <figure class="poster__figure">
@@ -64,7 +64,7 @@ const portrait = existsSync(MEDIA)
       </figure>
 
       <span class="poster__obj poster__obj--orbit" data-avoid aria-hidden="true">
-        <Sketch type="target" width="min(22vw, 240px)" seed={3} />
+        <Sketch type="target" width="min(13vw, 165px)" seed={3} />
       </span>
 
       <p class="poster__note poster__note--a label num">
@@ -122,15 +122,15 @@ const portrait = existsSync(MEDIA)
     </div>
 
     <span class="shape shape--sunset" data-avoid aria-hidden="true">
-      <Sketch type="cylinder" width="min(30vw, 360px)" seed={2} />
+      <Sketch type="cylinder" width="min(16vw, 200px)" seed={2} />
     </span>
 
     <span class="shape shape--study-a" data-avoid aria-hidden="true">
-      <Sketch type="box" width="min(30vw, 360px)" seed={4} />
+      <Sketch type="box" width="min(17vw, 215px)" seed={4} />
     </span>
 
     <span class="shape shape--spiral" data-avoid aria-hidden="true">
-      <Sketch type="spiral" width="min(26vw, 320px)" seed={41} />
+      <Sketch type="spiral" width="min(15vw, 190px)" seed={41} />
     </span>
 
     <div class="statement__wedge" data-reveal>
@@ -143,7 +143,7 @@ const portrait = existsSync(MEDIA)
   {/* ============ WORK ============================================ */}
   <section class="page section" id="work" data-rail-label="Work">
     <span class="shape shape--wave" data-avoid aria-hidden="true">
-      <Sketch type="chart" width="min(30vw, 380px)" seed={71} />
+      <Sketch type="chart" width="min(17vw, 210px)" seed={71} />
     </span>
 
     <div class="section__head">
@@ -190,11 +190,11 @@ const portrait = existsSync(MEDIA)
   {/* ============ WRITING ========================================= */}
   <section class="page section" id="writing" data-rail-label="Writing">
     <span class="shape shape--study-b" data-avoid aria-hidden="true">
-      <Sketch type="box-hatch" width="min(28vw, 340px)" seed={19} />
+      <Sketch type="box-hatch" width="min(17vw, 210px)" seed={19} />
     </span>
 
     <span class="shape shape--dissolve" data-avoid aria-hidden="true">
-      <Sketch type="sphere" width="min(26vw, 320px)" seed={5} />
+      <Sketch type="sphere" width="min(15vw, 190px)" seed={5} />
     </span>
 
     <div class="section__head">
@@ -244,7 +244,7 @@ const portrait = existsSync(MEDIA)
     <Ruler step={8} major={5} height={12} />
 
     <span class="shape shape--stack" data-avoid aria-hidden="true">
-      <Sketch type="cone" width="min(24vw, 300px)" seed={23} />
+      <Sketch type="cone" width="min(15vw, 185px)" seed={23} />
     </span>
 
     {
@@ -281,11 +281,11 @@ const portrait = existsSync(MEDIA)
   {/* ============ CLOSING ========================================= */}
   <section class="page section" id="close" data-rail-label="Contact">
     <span class="shape shape--study-c" data-avoid aria-hidden="true">
-      <Sketch type="helix" width="min(24vw, 280px)" seed={33} />
+      <Sketch type="helix" width="min(14vw, 175px)" seed={33} />
     </span>
 
     <span class="shape shape--arc" data-avoid aria-hidden="true">
-      <Sketch type="ellipses" width="min(34vw, 420px)" seed={9} />
+      <Sketch type="ellipses" width="min(18vw, 230px)" seed={9} />
     </span>
 
     <div class="closing">
@@ -322,7 +322,6 @@ const portrait = existsSync(MEDIA)
 
   .poster {
     position: relative;
-    overflow: hidden;
     border-bottom: var(--hair);
   }
 
@@ -345,7 +344,7 @@ const portrait = existsSync(MEDIA)
     display: block;
     pointer-events: none;
     z-index: 1;
-    transform: translateX(var(--avoid-shift, 0));
+    transform: translate(var(--avoid-x, 0), var(--avoid-y, 0));
   }
 
   .poster__obj--orbit {
@@ -364,29 +363,25 @@ const portrait = existsSync(MEDIA)
      the type — it is part of the sheet, not a sticker on it. */
   .poster__edge {
     position: absolute;
-    top: 0;
-    bottom: 0;
-    /* Flush to the viewport edge, not the page gutter. The stage is
-       a centred, max-width box, so `left: 0` would stop at its own
-       left edge; `50% - 50vw` is that distance back out to the screen.
-       .poster clips the overflow, so a scrollbar-width overhang on
-       browsers that count it in 50vw cannot cause a sideways scroll. */
+    /* Height comes from the drawing. Stretching this top-to-bottom
+       made collide.ts measure a box the height of the whole stage
+       rather than the height of the thing inside it, so it could
+       never find anywhere that box would fit. */
+    top: var(--s-12);
+    /* Flush to the viewport edge rather than the page gutter: the
+       stage is a centred max-width box, so `left: 0` would stop at
+       its own edge, and `50% - 50vw` is the distance back out to
+       the screen. collide.ts keeps it from actually hanging off. */
     left: calc(50% - 50vw);
-    display: flex;
-    align-items: center;
+    display: block;
     z-index: 0;
     pointer-events: none;
-    transform: translateX(var(--avoid-shift, 0));
+    transform: translate(var(--avoid-x, 0), var(--avoid-y, 0));
   }
 
   .poster__edge[data-clash],
   .poster__obj[data-clash] {
     display: none;
-  }
-
-  .poster__edge :global(.sketch) {
-    height: 100%;
-    width: auto;
   }
 
   /* Room on the left for it, so the photograph is not sitting on top
@@ -547,7 +542,7 @@ const portrait = existsSync(MEDIA)
 
   /* The pen studies. */
   .shape--study-a {
-    left: calc(50% - 50vw);
+    right: calc(50% - 50vw);
     top: 8%;
   }
 
@@ -576,9 +571,6 @@ const portrait = existsSync(MEDIA)
      z-index lifts the content clear of the field layer. */
   .section {
     border-top: 0;
-    /* Clip the shapes that hang past the viewport edge, so none of
-       them can create a horizontal scrollbar. */
-    overflow: hidden;
   }
 
   /* Content sits above the shape layer. */
