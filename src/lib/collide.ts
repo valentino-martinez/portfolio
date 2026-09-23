@@ -22,13 +22,19 @@ const TEXT = "p, h1, h2, h3, h4, li, a, figcaption, dt, dd, code, .label, .title
 /** Horizontal and vertical search range, in px. */
 const RANGE_X = 560;
 const RANGE_Y = 340;
-const STEP = 20;
+/* The page's base unit. Searching in multiples of it, from a start
+   that is itself snapped to it, means every drawing lands on the
+   same grid as the ruler ticks instead of at an arbitrary pixel. */
+const STEP = 8;
 
 /** Ignore overlaps smaller than this on both axes. */
 const TOLERANCE = 6;
 
 /** Keep a shape at least this far inside the viewport edges. */
-const EDGE_PAD = 4;
+const EDGE_PAD = 8;
+
+/** Fixed furniture a shape must not sit on top of — the side rails. */
+const KEEPOUT = "[data-rail]";
 
 interface Box {
   left: number;
@@ -37,11 +43,11 @@ interface Box {
   bottom: number;
 }
 
-const hits = (a: Box, b: Box) =>
-  a.left < b.right - TOLERANCE &&
-  a.right > b.left + TOLERANCE &&
-  a.top < b.bottom - TOLERANCE &&
-  a.bottom > b.top + TOLERANCE;
+const hits = (a: Box, b: Box, pad = TOLERANCE) =>
+  a.left < b.right - pad &&
+  a.right > b.left + pad &&
+  a.top < b.bottom - pad &&
+  a.bottom > b.top + pad;
 
 /** Offsets ordered by distance, so the shape barely moves if it can. */
 function candidates(): [number, number][] {
@@ -73,6 +79,16 @@ export function initCollide(root: ParentNode = document): () => void {
       const r = el.getBoundingClientRect();
       if (r.width === 0 || r.height === 0) continue;
       texts.push({ left: r.left, right: r.right, top: r.top, bottom: r.bottom });
+    }
+
+    /* The rails are fixed to the viewport edges, so a shape flush to
+       the edge lands on top of them. Treat them as obstacles. */
+    const keepout: Box[] = [];
+    for (const el of root.querySelectorAll(KEEPOUT)) {
+      const r = el.getBoundingClientRect();
+      if (r.width === 0 || r.height === 0) continue;
+      // Full height: the rail runs the length of the window.
+      keepout.push({ left: r.left, right: r.right, top: -1e6, bottom: 1e6 });
     }
 
     const vw = window.innerWidth;
@@ -121,8 +137,18 @@ export function initCollide(root: ParentNode = document): () => void {
         continue;
       }
 
+      /* Snap onto the grid — but snap the edge the shape is aligned
+         to. Snapping the left edge of a right-hand drawing leaves
+         its right edge wherever its own width happens to put it, so
+         a column of right-hand drawings ends up with a ragged outer
+         edge. Snap the outer edge and they line up with each other. */
+      const alignsRight = base.left + base.width / 2 > vw / 2;
+      const edge = alignsRight ? base.right : base.left;
+      const snap = -(((edge % STEP) + STEP) % STEP);
+
       let placed = false;
-      for (const [dx, dy] of OFFSETS) {
+      for (const [ox, dy] of OFFSETS) {
+        const dx = ox + snap;
         const box: Box = {
           left: base.left + dx,
           right: base.right + dx,
@@ -132,6 +158,9 @@ export function initCollide(root: ParentNode = document): () => void {
         // Whole drawing visible, or it is not worth drawing.
         if (box.left < minLeft || box.right > maxRight) continue;
         if (box.top < minTop || box.bottom > maxBottom) continue;
+        // Zero tolerance against the rails: a two-pixel kiss still
+        // reads as a drawing sitting on the ruler.
+        if (keepout.some((k) => hits(box, k, 0))) continue;
         if (texts.some((t) => hits(box, t))) continue;
         if (taken.some((o) => hits(box, o))) continue;
 
