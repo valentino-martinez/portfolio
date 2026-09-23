@@ -99,7 +99,10 @@ for (let i = 0; i < count; i++) {
       type: rect ? nextPanel() : nextField(),
       w: rect ? 240 + Math.round(rand() * 110) : 210 + Math.round(rand() * 90),
       grid: rect ? 0 : 14 + Math.round(rand() * 8),
-      screen: pick(SCREENS),
+      /* Image panels carry their own dithered tone. Laying another
+         ordered screen over the top eats the solid ground they are
+         supposed to have. Only the block fields get screened. */
+      screen: rect ? "solid" : pick(SCREENS),
       frame: rect && rand() < 0.7,
       cells: !rect && rand() < 0.45 ? "ring" : "solid",
     };

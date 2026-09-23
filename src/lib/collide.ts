@@ -189,8 +189,27 @@ export function initCollide(root: ParentNode = document): () => void {
   window.addEventListener("load", run);
   window.addEventListener("resize", schedule, { passive: true });
 
+  /* Placements are only as good as the layout they were measured
+     against. Shapes sit at percentages of the page, so anything
+     that changes the page height — a late font, an image finally
+     decoding, a lazily-loaded card — slides them out from under
+     their own result. Watching the document height catches every
+     one of those without having to enumerate them. */
+  let ro: ResizeObserver | undefined;
+  if ("ResizeObserver" in window) {
+    let lastHeight = document.documentElement.scrollHeight;
+    ro = new ResizeObserver(() => {
+      const h = document.documentElement.scrollHeight;
+      if (Math.abs(h - lastHeight) < 2) return;
+      lastHeight = h;
+      schedule();
+    });
+    ro.observe(document.body);
+  }
+
   return () => {
     clearTimeout(timer);
+    ro?.disconnect();
     window.removeEventListener("load", run);
     window.removeEventListener("resize", schedule);
   };
