@@ -33,6 +33,14 @@ interface Props {
   seed?: number;
   /** Cells across. Lower = chunkier. Go coarse when you go large. */
   grid?: number;
+  /**
+   * Knocks cells out of the filled areas on an ordered 4×4 matrix,
+   * turning solid ink into a screen. "50" is a fine checker, "25" a
+   * quarter tint. The same trick a 1-bit machine used for grey.
+   */
+  texture?: "solid" | "75" | "50" | "25";
+  /** A stepped pixel border around the shape, corners notched. */
+  frame?: boolean;
   class?: string;
 }
 
@@ -42,6 +50,8 @@ const {
   height,
   seed = 1,
   grid = 22,
+  texture = "solid",
+  frame = false,
   class: className = "",
 } = Astro.props;
 
@@ -249,6 +259,49 @@ switch (type) {
       }
     }
     break;
+  }
+}
+
+/* ---- screening and border ---------------------------------- */
+
+/* A 4×4 ordered matrix. Cells whose threshold sits above the level
+   are dropped, so a solid field becomes a regular tint rather than
+   a random scatter — which is what makes it read as a screen and
+   not as noise. */
+if (texture !== "solid") {
+  const BAYER4 = [
+    [0, 8, 2, 10],
+    [12, 4, 14, 6],
+    [3, 11, 1, 9],
+    [15, 7, 13, 5],
+  ];
+  const level = texture === "75" ? 12 : texture === "50" ? 8 : 4;
+  for (const i of [...on]) {
+    const x = i % COLS;
+    const y = Math.floor(i / COLS);
+    if (BAYER4[y % 4]![x % 4]! >= level) on.delete(i);
+  }
+}
+
+if (frame) {
+  // Outer ring, then the four corner cells removed and stepped back
+  // in by one — the chamfered corner of an old interface box.
+  for (let x = 0; x < COLS; x++) {
+    plot(x, 0);
+    plot(x, ROWS - 1);
+  }
+  for (let y = 0; y < ROWS; y++) {
+    plot(0, y);
+    plot(COLS - 1, y);
+  }
+  for (const [cxi, cyi] of [
+    [0, 0],
+    [COLS - 1, 0],
+    [0, ROWS - 1],
+    [COLS - 1, ROWS - 1],
+  ] as [number, number][]) {
+    clear(cxi, cyi);
+    plot(cxi === 0 ? 1 : COLS - 2, cyi === 0 ? 1 : ROWS - 2);
   }
 }
 

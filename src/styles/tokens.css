@@ -67,7 +67,12 @@
 
   /* --- MEASURE & GRID --------------------------------------- */
   --measure: 34rem;         /* ~66 characters of body copy      */
-  --page-max: 84rem;
+  /* Narrowed from 84rem so the background shapes have a lane to sit
+     in. At 1440px this roughly doubles how much of each shape clears
+     the text — 92px visible at 84rem, 188px at 72rem. Body copy is
+     unaffected: prose is capped separately by --measure. Widen it
+     back and the shapes simply shrink toward the edges again. */
+  --page-max: 72rem;
   --gutter: clamp(1rem, 3.5vw, 3.5rem);
   --grid-unit: 8px;         /* everything snaps to this         */
 

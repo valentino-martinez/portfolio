@@ -1,0 +1,176 @@
+---
+/**
+ * Sketch — pen-drawn construction studies, as a counterpart to the
+ * tiled blocks in Mark.astro. Two media on one page: mass and line.
+ *
+ * `box` is a real two-point perspective construction, not a picture
+ * of one. A horizon is chosen, two vanishing points are placed on
+ * it, and every edge of the cube is found by intersecting lines
+ * back to those points — so the foreshortening is correct and the
+ * construction lines actually meet where they should.
+ *
+ * Built at build time into plain SVG strokes. `non-scaling-stroke`
+ * keeps every line a true hairline no matter how large it is drawn.
+ */
+interface Props {
+  /** Any CSS length. */
+  width?: string;
+  seed?: number;
+  /** Draw the horizon and the lines running back to the vanishing
+   *  points. Off gives you just the solid. */
+  construction?: boolean;
+  class?: string;
+}
+
+const {
+  width = "220px",
+  seed = 1,
+  construction = true,
+  class: className = "",
+} = Astro.props;
+
+function rng(s: number) {
+  let x = (s * 1664525 + 1013904223) >>> 0;
+  return () => {
+    x ^= x << 13; x >>>= 0;
+    x ^= x >> 17;
+    x ^= x << 5;  x >>>= 0;
+    return x / 4294967296;
+  };
+}
+const rand = rng(seed || 1);
+
+const W = 200;
+const H = 150;
+
+type Pt = { x: number; y: number };
+
+/** y of the line through a and b at the given x. */
+const yAt = (a: Pt, b: Pt, x: number) =>
+  a.y + ((b.y - a.y) * (x - a.x)) / (b.x - a.x || 1e-6);
+
+/** Intersection of line a→b with line c→d. */
+function meet(a: Pt, b: Pt, c: Pt, d: Pt): Pt {
+  const a1 = b.y - a.y;
+  const b1 = a.x - b.x;
+  const c1 = a1 * a.x + b1 * a.y;
+  const a2 = d.y - c.y;
+  const b2 = c.x - d.x;
+  const c2 = a2 * c.x + b2 * c.y;
+  const det = a1 * b2 - a2 * b1;
+  if (Math.abs(det) < 1e-6) return { x: 0, y: 0 };
+  return { x: (b2 * c1 - b1 * c2) / det, y: (a1 * c2 - a2 * c1) / det };
+}
+
+/* --- the construction ------------------------------------------ */
+
+// Horizon, and vanishing points well off the frame so the
+// convergence stays gentle rather than cartoonish.
+const hl = H * (0.26 + rand() * 0.2);
+const vpL: Pt = { x: -W * (1.1 + rand() * 0.8), y: hl };
+const vpR: Pt = { x: W * (2.0 + rand() * 0.9), y: hl };
+
+// Leading vertical edge — the corner nearest the viewer.
+const cx = W * (0.40 + rand() * 0.12);
+const top: Pt = { x: cx, y: hl + H * (0.16 + rand() * 0.12) };
+const bot: Pt = { x: cx, y: top.y + H * (0.34 + rand() * 0.16) };
+
+// Outer verticals, left and right.
+const lx = cx - W * (0.24 + rand() * 0.08);
+const rx = cx + W * (0.26 + rand() * 0.08);
+
+const tl: Pt = { x: lx, y: yAt(top, vpL, lx) };
+const bl: Pt = { x: lx, y: yAt(bot, vpL, lx) };
+const tr: Pt = { x: rx, y: yAt(top, vpR, rx) };
+const br: Pt = { x: rx, y: yAt(bot, vpR, rx) };
+
+// The hidden back corner: where the two top edges converge.
+const tb = meet(tl, vpR, tr, vpL);
+const bb = meet(bl, vpR, br, vpL);
+
+const solid = [
+  [top, bot], [tl, bl], [tr, br],
+  [top, tl], [top, tr], [bot, bl], [bot, br],
+  [tl, tb], [tr, tb],
+];
+const hidden = [
+  [tb, bb], [bl, bb], [br, bb],
+];
+
+/* Construction lines run past the cube toward each vanishing point,
+   stopped at the frame edge rather than drawn to infinity. */
+const guides = construction
+  ? [
+      [tl, { x: 0, y: yAt(tl, vpL, 0) }],
+      [bl, { x: 0, y: yAt(bl, vpL, 0) }],
+      [tr, { x: W, y: yAt(tr, vpR, W) }],
+      [br, { x: W, y: yAt(br, vpR, W) }],
+    ]
+  : [];
+
+const d = (seg: Pt[]) =>
+  `M${seg[0]!.x.toFixed(2)},${seg[0]!.y.toFixed(2)}L${seg[1]!.x.toFixed(2)},${seg[1]!.y.toFixed(2)}`;
+---
+
+<svg
+  class:list={["sketch", className]}
+  style={`width:${width};aspect-ratio:${W} / ${H}`}
+  viewBox={`0 0 ${W} ${H}`}
+  fill="none"
+  aria-hidden="true"
+  focusable="false"
+>
+  {
+    construction && (
+      <>
+        <path class="sketch__hl" d={`M0,${hl}L${W},${hl}`} />
+        {guides.map((g) => (
+          <path class="sketch__guide" d={d(g)} />
+        ))}
+      </>
+    )
+  }
+
+  {hidden.map((seg) => <path class="sketch__hidden" d={d(seg)} />)}
+  {solid.map((seg) => <path class="sketch__edge" d={d(seg)} />)}
+</svg>
+
+<style>
+  .sketch {
+    display: block;
+    height: auto;
+    max-width: 100%;
+    color: inherit;
+  }
+
+  /* non-scaling-stroke: the line stays a hairline whatever size the
+     drawing is rendered at, which is what makes it read as pen
+     rather than as a scaled-up shape. */
+  .sketch path {
+    stroke: currentColor;
+    vector-effect: non-scaling-stroke;
+    stroke-linecap: square;
+  }
+
+  .sketch__edge {
+    stroke-width: 1.6;
+  }
+
+  /* Edges behind the solid — drawn, but lightly, the way you would
+     leave them in on a study. */
+  .sketch__hidden {
+    stroke-width: 0.9;
+    opacity: 0.4;
+  }
+
+  .sketch__guide {
+    stroke-width: 0.7;
+    opacity: 0.5;
+    stroke-dasharray: 3 3;
+  }
+
+  .sketch__hl {
+    stroke-width: 0.7;
+    opacity: 0.35;
+  }
+</style>
