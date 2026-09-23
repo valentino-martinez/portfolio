@@ -4,6 +4,7 @@ import Base from "../../layouts/Base.astro";
 import SectionHead from "../../components/SectionHead.astro";
 import Plate from "../../components/Plate.astro";
 import Photo from "../../components/Photo.astro";
+import Texture from "../../components/Texture.astro";
 import { byDateDesc, publicOnly } from "../../lib/format";
 
 const projects = publicOnly(await getCollection("projects"))
@@ -41,7 +42,7 @@ const projects = publicOnly(await getCollection("projects"))
                   <Photo src={p.data.cover} alt={p.data.coverAlt ?? ""} ratio="4/3" />
                 ) : (
                   <div class="plate-empty plate-empty--4x3">
-                    <span class="label num">PLATE</span>
+                    <Texture type={["contour", "hatch", "ramp"][i % 3] as never} seed={i * 13 + 2} density={0.45} />
                   </div>
                 )}
               </Plate>

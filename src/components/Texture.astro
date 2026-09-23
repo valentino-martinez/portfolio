@@ -1,0 +1,153 @@
+---
+/**
+ * Texture — a rectangular panel with nothing in it but tone, built
+ * out of line and dot. The filled rectangles from the Greiman
+ * spread: no subject, just a worked surface.
+ *
+ * Tone is made the way a printmaker makes it — by varying how much
+ * line is in a given area — not by tinting. Every stroke is full
+ * ink; a "light" panel is simply one with fewer strokes in it. So
+ * these stay strictly two-colour however pale they read.
+ *
+ * Fills its container. The viewBox is sliced rather than stretched,
+ * so hatching keeps its angle instead of shearing.
+ */
+import type { TextureType } from "../lib/types";
+
+interface Props {
+  type?: TextureType;
+  seed?: number;
+  /** 0–1, roughly how much ink. */
+  density?: number;
+  class?: string;
+}
+
+const { type = "hatch", seed = 1, density = 0.5, class: className = "" } =
+  Astro.props;
+
+function rng(s: number) {
+  let x = (s * 1664525 + 1013904223) >>> 0;
+  return () => {
+    x ^= x << 13; x >>>= 0;
+    x ^= x >> 17;
+    x ^= x << 5;  x >>>= 0;
+    return x / 4294967296;
+  };
+}
+const rand = rng(seed || 1);
+
+const W = 200;
+const H = 150;
+const d = Math.max(0.05, Math.min(1, density));
+
+type Mark = { d: string; w: number };
+const strokes: Mark[] = [];
+const dots: { x: number; y: number; r: number }[] = [];
+
+const n = (v: number) => v.toFixed(1);
+const seg = (x1: number, y1: number, x2: number, y2: number, w = 1) =>
+  strokes.push({ d: `M${n(x1)},${n(y1)}L${n(x2)},${n(y2)}`, w });
+
+/** Diagonal rules across the whole panel at the given spacing. */
+function diagonals(step: number, dir: 1 | -1, weight = 1) {
+  for (let i = -H; i < W + H; i += step) {
+    if (dir === 1) seg(i, H, i + H, 0, weight);
+    else seg(i, 0, i + H, H, weight);
+  }
+}
+
+switch (type) {
+  case "hatch":
+    diagonals(14 - d * 9, 1);
+    break;
+
+  case "crosshatch":
+    diagonals(16 - d * 9, 1);
+    diagonals(16 - d * 9, -1);
+    break;
+
+  case "scan": {
+    // Horizontal rules of varying weight — a swept signal.
+    for (let y = 2; y < H; y += 5 - d * 2) {
+      const w = rand() < d ? 2.4 : 0.8;
+      seg(0, y, W, y, w);
+    }
+    break;
+  }
+
+  case "ramp": {
+    // Spacing opens up across the panel, so tone falls off from
+    // solid at one edge to bare paper at the other.
+    let x = 0;
+    let gap = 1.5;
+    while (x < W) {
+      seg(x, 0, x, H, 1.6);
+      gap += 0.55 / d;
+      x += gap;
+    }
+    break;
+  }
+
+  case "contour": {
+    // Nested rings, offset a little each time, like a survey map.
+    const steps = Math.round(5 + d * 7);
+    for (let i = 0; i < steps; i++) {
+      const t = i / steps;
+      const w = (W / 2) * (1 - t) + 6;
+      const h = (H / 2) * (1 - t) + 5;
+      const cx = W / 2 + (rand() - 0.5) * 14 * t;
+      const cy = H / 2 + (rand() - 0.5) * 12 * t;
+      strokes.push({
+        d: `M${n(cx - w)},${n(cy)}a${n(w)},${n(h)} 0 1,0 ${n(w * 2)},0a${n(w)},${n(h)} 0 1,0 ${n(-w * 2)},0`,
+        w: 1,
+      });
+    }
+    break;
+  }
+
+  case "stipple": {
+    const count = Math.round(240 * d + 60);
+    for (let i = 0; i < count; i++) {
+      dots.push({ x: rand() * W, y: rand() * H, r: rand() < 0.25 ? 1.6 : 1 });
+    }
+    break;
+  }
+
+  case "grid": {
+    const step = 16 - d * 8;
+    for (let x = 0; x <= W; x += step) seg(x, 0, x, H, 0.9);
+    for (let y = 0; y <= H; y += step) seg(0, y, W, y, 0.9);
+    break;
+  }
+}
+---
+
+<svg
+  class:list={["texture", `texture--${type}`, className]}
+  viewBox={`0 0 ${W} ${H}`}
+  preserveAspectRatio="xMidYMid slice"
+  aria-hidden="true"
+  focusable="false"
+>
+  {strokes.map((m) => <path d={m.d} stroke-width={m.w} />)}
+  {dots.map((p) => <circle cx={p.x} cy={p.y} r={p.r} />)}
+</svg>
+
+<style>
+  .texture {
+    display: block;
+    width: 100%;
+    height: 100%;
+    color: inherit;
+  }
+
+  .texture path {
+    stroke: currentColor;
+    fill: none;
+    vector-effect: non-scaling-stroke;
+  }
+
+  .texture circle {
+    fill: currentColor;
+  }
+</style>

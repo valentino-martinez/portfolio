@@ -17,7 +17,10 @@
    Runs after layout, after fonts, and on resize. Never on scroll.
    ============================================================ */
 
-const TEXT = "p, h1, h2, h3, h4, li, a, figcaption, dt, dd, code, .label, .title";
+/* Everything a drawing must not cover. Images count: the drawings
+   are background, and a photograph is not background. */
+const TEXT =
+  "p, h1, h2, h3, h4, li, a, figcaption, dt, dd, code, .label, .title, img";
 
 /** Horizontal and vertical search range, in px. */
 const RANGE_X = 560;

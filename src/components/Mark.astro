@@ -75,6 +75,8 @@ const PANEL: Partial<Record<MarkType, { cols: number; rows: number }>> = {
   sunset: { cols: 18, rows: 12 },
   wave: { cols: 20, rows: 11 },
   arc: { cols: 22, rows: 9 },
+  horizon: { cols: 20, rows: 13 },
+  static: { cols: 22, rows: 14 },
 };
 const shape = PANEL[type];
 const COLS = shape ? shape.cols : N;
@@ -83,7 +85,12 @@ const ROWS = shape ? shape.rows : N;
 const CELL = 10;
 /* Solid panels have no gutter; drawn marks keep one so they read as
    strokes rather than mass. */
-const GAP = type === "sunset" || type === "wave" ? 0 : 1.6;
+const SOLID_PANEL =
+  type === "sunset" ||
+  type === "wave" ||
+  type === "horizon" ||
+  type === "static";
+const GAP = SOLID_PANEL ? 0 : 1.6;
 const VB_W = COLS * CELL;
 const VB_H = ROWS * CELL;
 const MID = (N - 1) / 2;
@@ -159,6 +166,38 @@ switch (type) {
     }
     const horizon = Math.round(ROWS * 0.62);
     fillRect(0, horizon, COLS, ROWS - horizon);
+    break;
+  }
+
+  case "horizon": {
+    // Sky that dissolves as it rises, sitting on solid ground: the
+    // framed landscape from the poster, in one bit.
+    const ground = Math.round(ROWS * 0.62);
+    for (let y = 0; y < ground; y++) {
+      // Denser toward the horizon, thinning to bare paper at the top.
+      const density = Math.pow(y / ground, 1.8);
+      for (let x = 0; x < COLS; x++) if (rand() < density) plot(x, y);
+    }
+    fillRect(0, ground, COLS, ROWS - ground);
+    // A disc sitting on the horizon line, lifted out of the ground.
+    const cx = COLS * (0.3 + rand() * 0.4);
+    const r = Math.min(3.5, ROWS * 0.22);
+    for (let y = ground; y < ROWS; y++) {
+      for (let x = 0; x < COLS; x++) {
+        if (Math.hypot(x + 0.5 - cx, y + 0.5 - ground) < r) clear(x, y);
+      }
+    }
+    break;
+  }
+
+  case "static": {
+    // Noise decaying left to right — the broken-signal rectangle.
+    for (let y = 0; y < ROWS; y++) {
+      for (let x = 0; x < COLS; x++) {
+        const fall = 1 - x / (COLS - 1);
+        if (rand() < fall * fall * 1.15) plot(x, y);
+      }
+    }
     break;
   }
 

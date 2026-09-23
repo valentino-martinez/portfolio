@@ -14,6 +14,7 @@ import Colophon from "../components/Colophon.astro";
 import Grain from "../components/Grain.astro";
 import Marquee from "../components/Marquee.astro";
 import SideRail from "../components/SideRail.astro";
+import Backdrop from "../components/Backdrop.astro";
 
 interface Props {
   title?: string;
@@ -112,6 +113,10 @@ const favicon = "data:image/svg+xml," + encodeURIComponent(FAVICON_SVG);
     {showTicker && <Marquee items={ticker} class="shell__ticker" />}
 
     <main id="main" class="shell">
+      {/* Positions are percentages of <main>, so the set spreads
+          down the whole page rather than clustering in a section. */}
+      <Backdrop seed={Astro.url.pathname} />
+
       {
         section && (
           <div class="page shell__runhead">

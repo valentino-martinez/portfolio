@@ -3,11 +3,12 @@ import { existsSync, readdirSync } from "node:fs";
 import { getCollection } from "astro:content";
 import Base from "../layouts/Base.astro";
 import Photo from "../components/Photo.astro";
+import Sketch from "../components/Sketch.astro";
+import Texture from "../components/Texture.astro";
 import Plate from "../components/Plate.astro";
 import EntryRow from "../components/EntryRow.astro";
 import Ruler from "../components/Ruler.astro";
 import ToneScale from "../components/ToneScale.astro";
-import Sketch from "../components/Sketch.astro";
 import Marquee from "../components/Marquee.astro";
 import { site, ticker } from "../site";
 import { byDateDesc, publicOnly, shortStamp, stamp } from "../lib/format";
@@ -121,18 +122,6 @@ const portrait = existsSync(MEDIA)
       </div>
     </div>
 
-    <span class="shape shape--sunset" data-avoid aria-hidden="true">
-      <Sketch type="cylinder" width="min(16vw, 200px)" seed={2} />
-    </span>
-
-    <span class="shape shape--study-a" data-avoid aria-hidden="true">
-      <Sketch type="box" width="min(17vw, 215px)" seed={4} />
-    </span>
-
-    <span class="shape shape--spiral" data-avoid aria-hidden="true">
-      <Sketch type="spiral" width="min(15vw, 190px)" seed={41} />
-    </span>
-
     <div class="statement__wedge" data-reveal>
       <p class="label" style="margin-bottom: 0.6rem">Fig. 0.1 — Step wedge</p>
       <ToneScale steps={12} pitch={6} height={40} />
@@ -142,9 +131,6 @@ const portrait = existsSync(MEDIA)
 
   {/* ============ WORK ============================================ */}
   <section class="page section" id="work" data-rail-label="Work">
-    <span class="shape shape--wave" data-avoid aria-hidden="true">
-      <Sketch type="chart" width="min(17vw, 210px)" seed={71} />
-    </span>
 
     <div class="section__head">
       <h2 class="label label--wide">
@@ -170,7 +156,7 @@ const portrait = existsSync(MEDIA)
                   <Photo src={p.data.cover} alt={p.data.coverAlt ?? ""} ratio="4/3" />
                 ) : (
                   <div class="plate-empty plate-empty--4x3">
-                    <span class="label num">PLATE</span>
+                    <Texture type={["hatch", "ramp", "contour"][i % 3] as never} seed={i * 7 + 3} density={0.45} />
                   </div>
                 )}
               </Plate>
@@ -189,13 +175,6 @@ const portrait = existsSync(MEDIA)
 
   {/* ============ WRITING ========================================= */}
   <section class="page section" id="writing" data-rail-label="Writing">
-    <span class="shape shape--study-b" data-avoid aria-hidden="true">
-      <Sketch type="box-hatch" width="min(17vw, 210px)" seed={19} />
-    </span>
-
-    <span class="shape shape--dissolve" data-avoid aria-hidden="true">
-      <Sketch type="sphere" width="min(15vw, 190px)" seed={5} />
-    </span>
 
     <div class="section__head">
       <h2 class="label label--wide">
@@ -243,10 +222,6 @@ const portrait = existsSync(MEDIA)
 
     <Ruler step={8} major={5} height={12} />
 
-    <span class="shape shape--stack" data-avoid aria-hidden="true">
-      <Sketch type="cone" width="min(15vw, 185px)" seed={23} />
-    </span>
-
     {
       studio.length > 0 ? (
         <div class="grid grid--4" data-reveal-group="70">
@@ -260,7 +235,7 @@ const portrait = existsSync(MEDIA)
                     <Photo src={item.data.cover} alt={item.data.coverAlt ?? ""} ratio="1/1" />
                   ) : (
                     <div class="plate-empty plate-empty--1x1">
-                      <span class="label num">PLATE</span>
+                      <Texture type={["crosshatch", "stipple", "scan", "grid"][i % 4] as never} seed={i * 11 + 5} density={0.4} />
                     </div>
                   )}
                 </Plate>
@@ -280,18 +255,11 @@ const portrait = existsSync(MEDIA)
 
   {/* ============ CLOSING ========================================= */}
   <section class="page section" id="close" data-rail-label="Contact">
-    <span class="shape shape--study-c" data-avoid aria-hidden="true">
-      <Sketch type="helix" width="min(14vw, 175px)" seed={33} />
-    </span>
-
-    <span class="shape shape--arc" data-avoid aria-hidden="true">
-      <Sketch type="ellipses" width="min(18vw, 230px)" seed={9} />
-    </span>
 
     <div class="closing">
       <Plate no="0.2" caption="Plate reserved" meta="EMPTY">
         <div class="plate-empty plate-empty--16x9">
-          <span class="label num">PLATE</span>
+          <Texture type="scan" seed={29} density={0.55} />
         </div>
       </Plate>
 
@@ -389,7 +357,8 @@ const portrait = existsSync(MEDIA)
   .poster__figure {
     position: relative;
     z-index: 2;
-    margin: 0 0 0 auto;
+    /* Flush to the left of the stage rather than pushed right. */
+    margin: 0 auto 0 0;
     width: min(72%, 46rem);
   }
 
@@ -501,66 +470,6 @@ const portrait = existsSync(MEDIA)
     .statement__lede {
       position: sticky;
       top: 5rem;
-    }
-  }
-
-  /* ---------- background shapes ------------------------------
-     Each one hangs off a screen edge, behind the content. `50% -
-     50vw` reaches from a centred max-width section back out to the
-     viewport edge. All are marked data-avoid, so collide.ts slides
-     them further out or drops them if they land on text. --------- */
-
-  .shape--sunset {
-    right: calc(50% - 50vw);
-    top: 6%;
-  }
-
-  .shape--spiral {
-    left: calc(50% - 50vw);
-    bottom: 4%;
-  }
-
-  .shape--wave {
-    left: calc(50% - 50vw);
-    top: 10%;
-  }
-
-  .shape--dissolve {
-    right: calc(50% - 50vw);
-    top: 14%;
-  }
-
-  .shape--stack {
-    right: calc(50% - 50vw);
-    top: -2rem;
-  }
-
-  .shape--arc {
-    left: calc(50% - 50vw);
-    bottom: 8%;
-  }
-
-  /* The pen studies. */
-  .shape--study-a {
-    right: calc(50% - 50vw);
-    top: 8%;
-  }
-
-  .shape--study-b {
-    left: calc(50% - 50vw);
-    bottom: 6%;
-  }
-
-  .shape--study-c {
-    right: calc(50% - 50vw);
-    top: 6%;
-  }
-
-  /* Below this the page is one narrow column and there is no margin
-     for a shape to live in; collide.ts would hide them all anyway. */
-  @media (max-width: 52rem) {
-    .shape {
-      display: none;
     }
   }
 

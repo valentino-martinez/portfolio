@@ -15,6 +15,9 @@ export interface MakeItem {
   specs: string[];
   /** Short right-hand caption: FIRED, IN PROGRESS, GIFTED. */
   status: string;
+  /** Surface drawn in the plate when there is no photograph. */
+  texture: TextureType;
+  seed: number;
 }
 
 /** The drawn objects in Mark.astro — orbit rings, spirals, tick
@@ -30,7 +33,9 @@ export type MarkType =
   | "ring" // one ellipse, off-axis
   | "sunset" // filled panel, a disc half-sunk behind a horizon
   | "wave" // horizontal striations, like video static in a block
-  | "arc"; // a long shallow curve, the pendulum line
+  | "arc" // a long shallow curve, the pendulum line
+  | "horizon" // pixel landscape: dissolving sky over solid ground
+  | "static"; // a rectangle of decaying noise
 
 /** One of the big shapes loose in the page. See Field.astro. */
 export interface FieldShape {
@@ -66,3 +71,13 @@ export type SketchType =
   | "helix"
   | "target"
   | "chart";
+
+/** The worked-surface panels in Texture.astro. */
+export type TextureType =
+  | "hatch"
+  | "crosshatch"
+  | "scan"
+  | "ramp"
+  | "contour"
+  | "stipple"
+  | "grid";
