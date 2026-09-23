@@ -7,7 +7,6 @@ import Plate from "../components/Plate.astro";
 import EntryRow from "../components/EntryRow.astro";
 import Ruler from "../components/Ruler.astro";
 import ToneScale from "../components/ToneScale.astro";
-import Mark from "../components/Mark.astro";
 import Sketch from "../components/Sketch.astro";
 import Marquee from "../components/Marquee.astro";
 import { site, ticker } from "../site";
@@ -47,8 +46,8 @@ const portrait = existsSync(MEDIA)
       {/* The big object lives at the very left edge, out by the
           rail and further left than the photograph, sitting behind
           everything as a piece of the page rather than on top of it. */}
-      <span class="poster__edge" aria-hidden="true">
-        <Mark type="checker" height="100%" grid={20} seed={17} />
+      <span class="poster__edge" data-avoid aria-hidden="true">
+        <Sketch type="plane" width="min(40vw, 520px)" seed={17} />
       </span>
 
       <figure class="poster__figure">
@@ -64,8 +63,8 @@ const portrait = existsSync(MEDIA)
         <figcaption class="poster__whisper">the spiritual double</figcaption>
       </figure>
 
-      <span class="poster__obj poster__obj--orbit" aria-hidden="true">
-        <Mark type="orbit" width="min(34vw, 300px)" grid={18} seed={3} />
+      <span class="poster__obj poster__obj--orbit" data-avoid aria-hidden="true">
+        <Sketch type="target" width="min(22vw, 240px)" seed={3} />
       </span>
 
       <p class="poster__note poster__note--a label num">
@@ -123,15 +122,15 @@ const portrait = existsSync(MEDIA)
     </div>
 
     <span class="shape shape--sunset" data-avoid aria-hidden="true">
-      <Mark type="sunset" width="min(34vw, 460px)" seed={2} texture="75" frame />
+      <Sketch type="cylinder" width="min(30vw, 360px)" seed={2} />
     </span>
 
     <span class="shape shape--study-a" data-avoid aria-hidden="true">
-      <Sketch width="min(30vw, 340px)" seed={4} />
+      <Sketch type="box" width="min(30vw, 360px)" seed={4} />
     </span>
 
     <span class="shape shape--spiral" data-avoid aria-hidden="true">
-      <Mark type="spiral" width="min(26vw, 300px)" grid={20} seed={41} />
+      <Sketch type="spiral" width="min(26vw, 320px)" seed={41} />
     </span>
 
     <div class="statement__wedge" data-reveal>
@@ -144,7 +143,7 @@ const portrait = existsSync(MEDIA)
   {/* ============ WORK ============================================ */}
   <section class="page section" id="work" data-rail-label="Work">
     <span class="shape shape--wave" data-avoid aria-hidden="true">
-      <Mark type="wave" width="min(30vw, 400px)" seed={71} texture="50" frame />
+      <Sketch type="chart" width="min(30vw, 380px)" seed={71} />
     </span>
 
     <div class="section__head">
@@ -191,11 +190,11 @@ const portrait = existsSync(MEDIA)
   {/* ============ WRITING ========================================= */}
   <section class="page section" id="writing" data-rail-label="Writing">
     <span class="shape shape--study-b" data-avoid aria-hidden="true">
-      <Sketch width="min(28vw, 300px)" seed={19} />
+      <Sketch type="box-hatch" width="min(28vw, 340px)" seed={19} />
     </span>
 
     <span class="shape shape--dissolve" data-avoid aria-hidden="true">
-      <Mark type="checker" width="min(30vw, 380px)" grid={18} seed={5} />
+      <Sketch type="sphere" width="min(26vw, 320px)" seed={5} />
     </span>
 
     <div class="section__head">
@@ -245,7 +244,7 @@ const portrait = existsSync(MEDIA)
     <Ruler step={8} major={5} height={12} />
 
     <span class="shape shape--stack" data-avoid aria-hidden="true">
-      <Mark type="stack" width="min(24vw, 260px)" grid={16} seed={23} texture="50" />
+      <Sketch type="cone" width="min(24vw, 300px)" seed={23} />
     </span>
 
     {
@@ -282,11 +281,11 @@ const portrait = existsSync(MEDIA)
   {/* ============ CLOSING ========================================= */}
   <section class="page section" id="close" data-rail-label="Contact">
     <span class="shape shape--study-c" data-avoid aria-hidden="true">
-      <Sketch width="min(32vw, 380px)" seed={33} construction={false} />
+      <Sketch type="helix" width="min(24vw, 280px)" seed={33} />
     </span>
 
     <span class="shape shape--arc" data-avoid aria-hidden="true">
-      <Mark type="arc" width="min(46vw, 620px)" seed={9} />
+      <Sketch type="ellipses" width="min(34vw, 420px)" seed={9} />
     </span>
 
     <div class="closing">
@@ -344,15 +343,14 @@ const portrait = existsSync(MEDIA)
   .poster__obj {
     position: absolute;
     display: block;
-    opacity: 0.8;
     pointer-events: none;
     z-index: 1;
+    transform: translateX(var(--avoid-shift, 0));
   }
 
   .poster__obj--orbit {
     right: -6%;
     top: -4%;
-    opacity: 0.5;
   }
 
   .poster__obj--checker {
@@ -377,11 +375,16 @@ const portrait = existsSync(MEDIA)
     display: flex;
     align-items: center;
     z-index: 0;
-    opacity: 0.55;
     pointer-events: none;
+    transform: translateX(var(--avoid-shift, 0));
   }
 
-  .poster__edge :global(.mark) {
+  .poster__edge[data-clash],
+  .poster__obj[data-clash] {
+    display: none;
+  }
+
+  .poster__edge :global(.sketch) {
     height: 100%;
     width: auto;
   }
@@ -403,14 +406,12 @@ const portrait = existsSync(MEDIA)
     font-family: var(--font-serif);
     font-size: clamp(0.9rem, 1.7vw, 1.5rem);
     white-space: nowrap;
-    opacity: 0.9;
   }
 
   .poster__note {
     position: absolute;
     z-index: 3;
     line-height: 1.5;
-    opacity: 0.7;
   }
   .poster__note--a {
     left: var(--gutter);
@@ -433,7 +434,6 @@ const portrait = existsSync(MEDIA)
     position: relative;
     z-index: 3;
     text-align: right;
-    opacity: 0.75;
   }
 
   .poster__base {
@@ -518,57 +518,47 @@ const portrait = existsSync(MEDIA)
   .shape--sunset {
     right: calc(50% - 50vw);
     top: 6%;
-    --shape-opacity: 0.5;
   }
 
   .shape--spiral {
     left: calc(50% - 50vw);
     bottom: 4%;
-    --shape-opacity: 0.35;
   }
 
   .shape--wave {
     left: calc(50% - 50vw);
     top: 10%;
-    --shape-opacity: 0.45;
   }
 
   .shape--dissolve {
     right: calc(50% - 50vw);
     top: 14%;
-    --shape-opacity: 0.4;
   }
 
   .shape--stack {
     right: calc(50% - 50vw);
     top: -2rem;
-    --shape-opacity: 0.4;
   }
 
   .shape--arc {
     left: calc(50% - 50vw);
     bottom: 8%;
-    --shape-opacity: 0.35;
   }
 
-  /* The pen studies. Line work carries at a higher opacity than a
-     block of ink does — a hairline at 0.35 simply disappears. */
+  /* The pen studies. */
   .shape--study-a {
     left: calc(50% - 50vw);
     top: 8%;
-    --shape-opacity: 0.6;
   }
 
   .shape--study-b {
     left: calc(50% - 50vw);
     bottom: 6%;
-    --shape-opacity: 0.6;
   }
 
   .shape--study-c {
     right: calc(50% - 50vw);
     top: 6%;
-    --shape-opacity: 0.55;
   }
 
   /* Below this the page is one narrow column and there is no margin
@@ -598,7 +588,6 @@ const portrait = existsSync(MEDIA)
   }
 
   .section__no {
-    opacity: 0.45;
     margin-right: 0.8em;
   }
 
@@ -614,10 +603,9 @@ const portrait = existsSync(MEDIA)
   }
 
   .empty {
-    border: var(--rule) dashed var(--ink-40);
+    border: var(--rule) dashed var(--ink);
     padding: var(--s-6);
     text-align: center;
-    opacity: 0.7;
   }
 
   /* ---------- grids ------------------------------------------ */
@@ -642,7 +630,6 @@ const portrait = existsSync(MEDIA)
     margin-top: var(--s-3);
     font-size: var(--t-sm);
     line-height: var(--lead-body);
-    opacity: 0.85;
   }
 
   .card__blank {
@@ -654,7 +641,6 @@ const portrait = existsSync(MEDIA)
       var(--ink) 0 1px,
       transparent 1px 7px
     );
-    opacity: 0.5;
   }
 
   .rows {
@@ -698,6 +684,5 @@ const portrait = existsSync(MEDIA)
     font-size: var(--t-sm);
     line-height: var(--lead-body);
     max-width: 32rem;
-    opacity: 0.85;
   }
 </style>

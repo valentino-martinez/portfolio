@@ -41,6 +41,16 @@ interface Props {
   texture?: "solid" | "75" | "50" | "25";
   /** A stepped pixel border around the shape, corners notched. */
   frame?: boolean;
+  /**
+   * How each cell is drawn.
+   *  solid — a filled square
+   *  ring  — a square with its middle punched out, so the cell has
+   *          a border and reads lighter without any transparency
+   *  dot   — filled, with a small hole at the centre
+   * The holes are real holes: one path, fill-rule evenodd. Nothing
+   * is tinted and nothing is semi-transparent.
+   */
+  cells?: "solid" | "ring" | "dot";
   class?: string;
 }
 
@@ -52,6 +62,7 @@ const {
   grid = 22,
   texture = "solid",
   frame = false,
+  cells = "solid",
   class: className = "",
 } = Astro.props;
 
@@ -305,29 +316,57 @@ if (frame) {
   }
 }
 
-/* Merge each row into horizontal runs. For the solid panels this
-   means a stroke is one rect with no seam down it; for the gutter
-   marks the run length is always 1, so nothing changes. */
+/* ---- emit ---------------------------------------------------- */
+
+/* Solid cells merge along each row into runs, so a stroke is one
+   rect with no seam. Ring and dot cells cannot merge — each needs
+   its own hole — so they are emitted per cell as a two-subpath
+   figure and punched out with fill-rule="evenodd". */
+
 const tiles: { x: number; y: number; w: number; h: number }[] = [];
-for (let y = 0; y < ROWS; y++) {
-  let x = 0;
-  while (x < COLS) {
-    if (!on.has(y * COLS + x)) {
-      x++;
-      continue;
-    }
-    const start = x;
-    while (x < COLS && on.has(y * COLS + x)) x++;
-    const len = GAP > 0 ? 1 : x - start;
-    if (GAP > 0) {
-      for (let k = start; k < x; k++) {
-        tiles.push({ x: k * CELL, y: y * CELL, w: CELL - GAP, h: CELL - GAP });
+let holePath = "";
+
+const rect = (x: number, y: number, w: number, h: number) =>
+  `M${x},${y}h${w}v${h}h${-w}Z`;
+
+if (cells === "solid") {
+  for (let y = 0; y < ROWS; y++) {
+    let x = 0;
+    while (x < COLS) {
+      if (!on.has(y * COLS + x)) {
+        x++;
+        continue;
       }
-    } else {
-      tiles.push({ x: start * CELL, y: y * CELL, w: len * CELL, h: CELL });
+      const start = x;
+      while (x < COLS && on.has(y * COLS + x)) x++;
+      if (GAP > 0) {
+        for (let k = start; k < x; k++) {
+          tiles.push({ x: k * CELL, y: y * CELL, w: CELL - GAP, h: CELL - GAP });
+        }
+      } else {
+        tiles.push({
+          x: start * CELL,
+          y: y * CELL,
+          w: (x - start) * CELL,
+          h: CELL,
+        });
+      }
     }
   }
+} else {
+  // Wall thickness of the ring, in viewBox units.
+  const size = CELL - GAP;
+  const inset = cells === "ring" ? size * 0.3 : size * 0.34;
+  const holeW = cells === "ring" ? size - inset * 2 : size * 0.3;
+  for (const i of on) {
+    const x = (i % COLS) * CELL;
+    const y = Math.floor(i / COLS) * CELL;
+    const hx = x + (size - holeW) / 2;
+    const hy = y + (size - holeW) / 2;
+    holePath += rect(x, y, size, size) + rect(hx, hy, holeW, holeW);
+  }
 }
+
 ---
 
 <svg
@@ -338,11 +377,12 @@ for (let y = 0; y < ROWS; y++) {
   focusable="false"
   shape-rendering="crispEdges"
 >
-  {
-    tiles.map((t) => (
-      <rect x={t.x} y={t.y} width={t.w} height={t.h} fill="currentColor" />
-    ))
-  }
+  {tiles.map((t) => <rect x={t.x} y={t.y} width={t.w} height={t.h} fill="currentColor" />)}
+
+  {/* One path for every ringed cell. evenodd turns the inner
+      subpath into a genuine hole, not a paper-coloured patch, so
+      the mark still works over anything behind it. */}
+  {holePath && <path d={holePath} fill="currentColor" fill-rule="evenodd" />}
 </svg>
 
 <style>

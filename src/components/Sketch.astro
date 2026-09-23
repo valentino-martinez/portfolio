@@ -1,28 +1,32 @@
 ---
 /**
- * Sketch — pen-drawn construction studies, as a counterpart to the
- * tiled blocks in Mark.astro. Two media on one page: mass and line.
+ * Sketch — pen-drawn construction studies.
  *
- * `box` is a real two-point perspective construction, not a picture
- * of one. A horizon is chosen, two vanishing points are placed on
- * it, and every edge of the cube is found by intersecting lines
- * back to those points — so the foreshortening is correct and the
- * construction lines actually meet where they should.
+ * Everything is generated from real geometry rather than traced:
+ * the perspective solids are built by placing vanishing points on a
+ * horizon and intersecting lines back to them, so the foreshortening
+ * is correct and the construction lines meet where they should. The
+ * curved solids are drawn from parametric ellipses.
  *
- * Built at build time into plain SVG strokes. `non-scaling-stroke`
- * keeps every line a true hairline no matter how large it is drawn.
+ * Plain SVG strokes, built at build time, no JavaScript. Secondary
+ * lines read as secondary through dash pattern and weight — never
+ * through opacity, because a faded black line is a grey line and
+ * this palette has no grey in it.
  */
+import type { SketchType } from "../lib/types";
+
 interface Props {
+  type?: SketchType;
   /** Any CSS length. */
   width?: string;
   seed?: number;
-  /** Draw the horizon and the lines running back to the vanishing
-   *  points. Off gives you just the solid. */
+  /** Draw horizon and vanishing lines where the study has them. */
   construction?: boolean;
   class?: string;
 }
 
 const {
+  type = "box",
   width = "220px",
   seed = 1,
   construction = true,
@@ -39,100 +43,239 @@ function rng(s: number) {
   };
 }
 const rand = rng(seed || 1);
+const between = (a: number, b: number) => a + rand() * (b - a);
 
 const W = 200;
 const H = 150;
 
 type Pt = { x: number; y: number };
+type Path = { d: string; cls: "edge" | "hidden" | "guide" | "hl" };
 
-/** y of the line through a and b at the given x. */
+const paths: Path[] = [];
+const add = (d: string, cls: Path["cls"] = "edge") => paths.push({ d, cls });
+
+const n = (v: number) => v.toFixed(2);
+const line = (a: Pt, b: Pt) => `M${n(a.x)},${n(a.y)}L${n(b.x)},${n(b.y)}`;
+const poly = (pts: Pt[]) =>
+  pts.map((p, i) => `${i ? "L" : "M"}${n(p.x)},${n(p.y)}`).join("");
+
+/** y of the line through a and b at x. */
 const yAt = (a: Pt, b: Pt, x: number) =>
   a.y + ((b.y - a.y) * (x - a.x)) / (b.x - a.x || 1e-6);
 
-/** Intersection of line a→b with line c→d. */
 function meet(a: Pt, b: Pt, c: Pt, d: Pt): Pt {
-  const a1 = b.y - a.y;
-  const b1 = a.x - b.x;
-  const c1 = a1 * a.x + b1 * a.y;
-  const a2 = d.y - c.y;
-  const b2 = c.x - d.x;
-  const c2 = a2 * c.x + b2 * c.y;
+  const a1 = b.y - a.y, b1 = a.x - b.x, c1 = a1 * a.x + b1 * a.y;
+  const a2 = d.y - c.y, b2 = c.x - d.x, c2 = a2 * c.x + b2 * c.y;
   const det = a1 * b2 - a2 * b1;
   if (Math.abs(det) < 1e-6) return { x: 0, y: 0 };
   return { x: (b2 * c1 - b1 * c2) / det, y: (a1 * c2 - a2 * c1) / det };
 }
 
-/* --- the construction ------------------------------------------ */
+function ellipse(cx: number, cy: number, rx: number, ry: number, rot = 0): Pt[] {
+  const c = Math.cos(rot), s = Math.sin(rot);
+  const out: Pt[] = [];
+  for (let i = 0; i <= 72; i++) {
+    const t = (i / 72) * Math.PI * 2;
+    const x = Math.cos(t) * rx, y = Math.sin(t) * ry;
+    out.push({ x: cx + x * c - y * s, y: cy + x * s + y * c });
+  }
+  return out;
+}
 
-// Horizon, and vanishing points well off the frame so the
-// convergence stays gentle rather than cartoonish.
-const hl = H * (0.26 + rand() * 0.2);
-const vpL: Pt = { x: -W * (1.1 + rand() * 0.8), y: hl };
-const vpR: Pt = { x: W * (2.0 + rand() * 0.9), y: hl };
+/** Half an ellipse: dir -1 is the back edge, +1 the front. */
+function halfEllipse(cx: number, cy: number, rx: number, ry: number, dir: number) {
+  const out: Pt[] = [];
+  for (let i = 0; i <= 36; i++) {
+    const t = Math.PI * (i / 36);
+    out.push({ x: cx + Math.cos(t) * rx * -1, y: cy + Math.sin(t) * ry * dir });
+  }
+  return out;
+}
 
-// Leading vertical edge — the corner nearest the viewer.
-const cx = W * (0.40 + rand() * 0.12);
-const top: Pt = { x: cx, y: hl + H * (0.16 + rand() * 0.12) };
-const bot: Pt = { x: cx, y: top.y + H * (0.34 + rand() * 0.16) };
+/* ---- the studies --------------------------------------------- */
 
-// Outer verticals, left and right.
-const lx = cx - W * (0.24 + rand() * 0.08);
-const rx = cx + W * (0.26 + rand() * 0.08);
+/** Shared two-point setup, used by the box studies. */
+function twoPoint() {
+  const hl = H * between(0.22, 0.42);
+  const vpL: Pt = { x: -W * between(1.1, 1.9), y: hl };
+  const vpR: Pt = { x: W * between(2.0, 2.9), y: hl };
+  const cx = W * between(0.40, 0.52);
+  const top: Pt = { x: cx, y: hl + H * between(0.14, 0.26) };
+  const bot: Pt = { x: cx, y: top.y + H * between(0.32, 0.46) };
+  const lx = cx - W * between(0.22, 0.32);
+  const rx = cx + W * between(0.24, 0.34);
+  const tl = { x: lx, y: yAt(top, vpL, lx) };
+  const bl = { x: lx, y: yAt(bot, vpL, lx) };
+  const tr = { x: rx, y: yAt(top, vpR, rx) };
+  const br = { x: rx, y: yAt(bot, vpR, rx) };
+  const tb = meet(tl, vpR, tr, vpL);
+  const bb = meet(bl, vpR, br, vpL);
+  return { hl, vpL, vpR, top, bot, tl, bl, tr, br, tb, bb };
+}
 
-const tl: Pt = { x: lx, y: yAt(top, vpL, lx) };
-const bl: Pt = { x: lx, y: yAt(bot, vpL, lx) };
-const tr: Pt = { x: rx, y: yAt(top, vpR, rx) };
-const br: Pt = { x: rx, y: yAt(bot, vpR, rx) };
+function drawBox(hatch: boolean) {
+  const g = twoPoint();
+  if (construction) {
+    add(`M0,${n(g.hl)}L${W},${n(g.hl)}`, "hl");
+    add(line(g.tl, { x: 0, y: yAt(g.tl, g.vpL, 0) }), "guide");
+    add(line(g.bl, { x: 0, y: yAt(g.bl, g.vpL, 0) }), "guide");
+    add(line(g.tr, { x: W, y: yAt(g.tr, g.vpR, W) }), "guide");
+    add(line(g.br, { x: W, y: yAt(g.br, g.vpR, W) }), "guide");
+  }
+  for (const s of [[g.tb, g.bb], [g.bl, g.bb], [g.br, g.bb]] as Pt[][]) {
+    add(line(s[0]!, s[1]!), "hidden");
+  }
+  if (hatch) {
+    // Rule the left face between its two edges, corner to corner.
+    for (let i = 1; i < 9; i++) {
+      const t = i / 9;
+      const a = { x: g.top.x + (g.tl.x - g.top.x) * t, y: g.top.y + (g.tl.y - g.top.y) * t };
+      const b = { x: g.bot.x + (g.bl.x - g.bot.x) * t, y: g.bot.y + (g.bl.y - g.bot.y) * t };
+      add(line(a, b), "guide");
+    }
+  }
+  for (const s of [
+    [g.top, g.bot], [g.tl, g.bl], [g.tr, g.br],
+    [g.top, g.tl], [g.top, g.tr], [g.bot, g.bl], [g.bot, g.br],
+    [g.tl, g.tb], [g.tr, g.tb],
+  ] as Pt[][]) {
+    add(line(s[0]!, s[1]!));
+  }
+}
 
-// The hidden back corner: where the two top edges converge.
-const tb = meet(tl, vpR, tr, vpL);
-const bb = meet(bl, vpR, br, vpL);
+switch (type) {
+  case "box":
+    drawBox(false);
+    break;
 
-const solid = [
-  [top, bot], [tl, bl], [tr, br],
-  [top, tl], [top, tr], [bot, bl], [bot, br],
-  [tl, tb], [tr, tb],
-];
-const hidden = [
-  [tb, bb], [bl, bb], [br, bb],
-];
+  case "box-hatch":
+    drawBox(true);
+    break;
 
-/* Construction lines run past the cube toward each vanishing point,
-   stopped at the frame edge rather than drawn to infinity. */
-const guides = construction
-  ? [
-      [tl, { x: 0, y: yAt(tl, vpL, 0) }],
-      [bl, { x: 0, y: yAt(bl, vpL, 0) }],
-      [tr, { x: W, y: yAt(tr, vpR, W) }],
-      [br, { x: W, y: yAt(br, vpR, W) }],
-    ]
-  : [];
+  case "cylinder": {
+    const cx = W / 2, rx = W * between(0.2, 0.28), ry = rx * between(0.3, 0.42);
+    const ty = H * 0.28, by = H * 0.76;
+    add(poly(ellipse(cx, ty, rx, ry)));
+    add(poly(halfEllipse(cx, by, rx, ry, 1)));
+    add(poly(halfEllipse(cx, by, rx, ry, -1)), "hidden");
+    add(line({ x: cx - rx, y: ty }, { x: cx - rx, y: by }));
+    add(line({ x: cx + rx, y: ty }, { x: cx + rx, y: by }));
+    if (construction) add(line({ x: cx, y: ty - ry }, { x: cx, y: by + ry }), "guide");
+    break;
+  }
 
-const d = (seg: Pt[]) =>
-  `M${seg[0]!.x.toFixed(2)},${seg[0]!.y.toFixed(2)}L${seg[1]!.x.toFixed(2)},${seg[1]!.y.toFixed(2)}`;
+  case "cone": {
+    const cx = W / 2, rx = W * between(0.22, 0.3), ry = rx * between(0.3, 0.4);
+    const by = H * 0.74, apex = { x: cx + W * between(-0.04, 0.04), y: H * 0.2 };
+    add(poly(halfEllipse(cx, by, rx, ry, 1)));
+    add(poly(halfEllipse(cx, by, rx, ry, -1)), "hidden");
+    add(line(apex, { x: cx - rx, y: by }));
+    add(line(apex, { x: cx + rx, y: by }));
+    if (construction) add(line(apex, { x: cx, y: by + ry }), "guide");
+    break;
+  }
+
+  case "sphere": {
+    const cx = W / 2, cy = H / 2, r = Math.min(W, H) * between(0.26, 0.32);
+    add(poly(ellipse(cx, cy, r, r)));
+    // Longitude and latitude, so it reads as a solid not a disc.
+    for (const k of [0.3, 0.62, 0.9]) add(poly(ellipse(cx, cy, r * k, r)), "hidden");
+    for (const k of [-0.5, 0, 0.5]) {
+      add(poly(ellipse(cx, cy + r * k, r * Math.sqrt(Math.max(0.02, 1 - k * k)), r * 0.16)), "hidden");
+    }
+    break;
+  }
+
+  case "plane": {
+    // A ground grid running back to a single vanishing point.
+    const hl = H * 0.3;
+    const vp: Pt = { x: W * between(0.4, 0.6), y: hl };
+    if (construction) add(`M0,${n(hl)}L${W},${n(hl)}`, "hl");
+    for (let i = 0; i <= 10; i++) {
+      const x = (-W * 0.6) + (i / 10) * (W * 2.2);
+      add(line({ x, y: H }, vp), "guide");
+    }
+    for (let i = 1; i <= 6; i++) {
+      // Spacing compresses toward the horizon.
+      const y = hl + (H - hl) * Math.pow(i / 6, 2.1);
+      add(line({ x: 0, y }, { x: W, y }));
+    }
+    break;
+  }
+
+  case "ellipses": {
+    const cx = W / 2, cy = H / 2;
+    const count = 4;
+    for (let i = 0; i < count; i++) {
+      const rx = W * (0.34 - i * 0.06);
+      add(poly(ellipse(cx, cy, rx, rx * between(0.22, 0.42), between(-0.6, 0.6))));
+    }
+    if (construction) {
+      add(line({ x: 0, y: cy }, { x: W, y: cy }), "guide");
+      add(line({ x: cx, y: 0 }, { x: cx, y: H }), "guide");
+    }
+    break;
+  }
+
+  case "spiral": {
+    const cx = W / 2, cy = H / 2, turns = between(2.8, 4);
+    const R = Math.min(W, H) * 0.36;
+    const pts: Pt[] = [];
+    for (let i = 0; i <= 480; i++) {
+      const t = i / 480, th = t * turns * Math.PI * 2;
+      pts.push({ x: cx + Math.cos(th) * R * t, y: cy + Math.sin(th) * R * t * 0.7 });
+    }
+    add(poly(pts));
+    break;
+  }
+
+  case "helix": {
+    const cx = W / 2, rx = W * 0.18, pitch = H * 0.62, coils = 3.5;
+    const pts: Pt[] = [];
+    for (let i = 0; i <= 400; i++) {
+      const t = i / 400, th = t * coils * Math.PI * 2;
+      pts.push({ x: cx + Math.cos(th) * rx, y: H * 0.2 + t * pitch + Math.sin(th) * rx * 0.22 });
+    }
+    add(poly(pts));
+    if (construction) {
+      add(line({ x: cx - rx, y: H * 0.16 }, { x: cx - rx, y: H * 0.86 }), "guide");
+      add(line({ x: cx + rx, y: H * 0.16 }, { x: cx + rx, y: H * 0.86 }), "guide");
+    }
+    break;
+  }
+
+  case "target": {
+    const cx = W / 2, cy = H / 2, R = Math.min(W, H) * 0.34;
+    for (const k of [1, 0.66, 0.33]) add(poly(ellipse(cx, cy, R * k, R * k)));
+    add(line({ x: cx - R * 1.3, y: cy }, { x: cx + R * 1.3, y: cy }), "guide");
+    add(line({ x: cx, y: cy - R * 1.3 }, { x: cx, y: cy + R * 1.3 }), "guide");
+    break;
+  }
+
+  case "chart": {
+    // A tick chart under a lobed envelope, drawn as outlines.
+    const base = H * 0.78, count = 16;
+    const step = (W * 0.8) / count;
+    for (let i = 0; i < count; i++) {
+      const x = W * 0.1 + i * step;
+      const h = Math.pow(Math.sin(((i + 0.5) / count) * Math.PI), 0.7) * H * 0.5 * between(0.5, 1);
+      add(`M${n(x)},${n(base)}v${n(-h)}h${n(step * 0.6)}v${n(h)}`);
+    }
+    add(line({ x: W * 0.06, y: base }, { x: W * 0.94, y: base }));
+    break;
+  }
+}
 ---
 
 <svg
-  class:list={["sketch", className]}
+  class:list={["sketch", `sketch--${type}`, className]}
   style={`width:${width};aspect-ratio:${W} / ${H}`}
   viewBox={`0 0 ${W} ${H}`}
   fill="none"
   aria-hidden="true"
   focusable="false"
 >
-  {
-    construction && (
-      <>
-        <path class="sketch__hl" d={`M0,${hl}L${W},${hl}`} />
-        {guides.map((g) => (
-          <path class="sketch__guide" d={d(g)} />
-        ))}
-      </>
-    )
-  }
-
-  {hidden.map((seg) => <path class="sketch__hidden" d={d(seg)} />)}
-  {solid.map((seg) => <path class="sketch__edge" d={d(seg)} />)}
+  {paths.map((p) => <path class={`sketch__${p.cls}`} d={p.d} />)}
 </svg>
 
 <style>
@@ -143,34 +286,33 @@ const d = (seg: Pt[]) =>
     color: inherit;
   }
 
-  /* non-scaling-stroke: the line stays a hairline whatever size the
-     drawing is rendered at, which is what makes it read as pen
-     rather than as a scaled-up shape. */
+  /* non-scaling-stroke keeps every line a true hairline whatever
+     size the drawing is rendered at — which is what makes it read
+     as pen rather than as a scaled-up shape. */
   .sketch path {
     stroke: currentColor;
     vector-effect: non-scaling-stroke;
     stroke-linecap: square;
+    stroke-linejoin: miter;
+    fill: none;
   }
 
   .sketch__edge {
     stroke-width: 1.6;
   }
 
-  /* Edges behind the solid — drawn, but lightly, the way you would
-     leave them in on a study. */
   .sketch__hidden {
-    stroke-width: 0.9;
-    opacity: 0.4;
+    stroke-width: 1;
+    stroke-dasharray: 2 3;
   }
 
   .sketch__guide {
-    stroke-width: 0.7;
-    opacity: 0.5;
-    stroke-dasharray: 3 3;
+    stroke-width: 1;
+    stroke-dasharray: 1 5;
   }
 
   .sketch__hl {
-    stroke-width: 0.7;
-    opacity: 0.35;
+    stroke-width: 1;
+    stroke-dasharray: 6 4;
   }
 </style>

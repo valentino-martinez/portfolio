@@ -22,7 +22,8 @@ interface Props {
   section?: string;
   /** Hide the word-chain strip under the masthead. */
   ticker?: boolean;
-  /** 0–1 paper grain. 0 removes it entirely. */
+  /** Paper grain: 1 shows it, 0 removes it. Density is set in
+   *  Grain.astro, not here — fading it would reintroduce grey. */
   grain?: number;
   class?: string;
 }
@@ -32,7 +33,7 @@ const {
   description = site.description,
   section,
   ticker: showTicker = true,
-  grain = 0.11,
+  grain = 1,
   class: className = "",
 } = Astro.props;
 
@@ -147,6 +148,5 @@ const favicon = "data:image/svg+xml," + encodeURIComponent(FAVICON_SVG);
     align-items: baseline;
     padding-block: var(--s-2);
     border-bottom: var(--hair);
-    opacity: 0.75;
   }
 </style>

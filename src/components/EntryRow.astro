@@ -70,11 +70,7 @@ const { href, no, title, summary, date, tags = [], note } = Astro.props;
 
   .row__no {
     font-size: var(--t-xs);
-    opacity: 0.5;
     letter-spacing: var(--track-wide);
-  }
-  .row__link:hover .row__no {
-    opacity: 0.8;
   }
 
   .row__main {
@@ -97,7 +93,6 @@ const { href, no, title, summary, date, tags = [], note } = Astro.props;
     font-size: var(--t-sm);
     line-height: var(--lead-body);
     max-width: var(--measure);
-    opacity: 0.85;
   }
 
   .row__tags {
@@ -105,7 +100,6 @@ const { href, no, title, summary, date, tags = [], note } = Astro.props;
     flex-wrap: wrap;
     gap: var(--s-2);
     margin-top: var(--s-3);
-    opacity: 0.7;
   }
 
   .row__tag::before {
@@ -117,7 +111,6 @@ const { href, no, title, summary, date, tags = [], note } = Astro.props;
     align-items: baseline;
     gap: var(--s-3);
     white-space: nowrap;
-    opacity: 0.7;
   }
   .row__link:hover .row__meta {
     opacity: 1;

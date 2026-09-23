@@ -359,8 +359,9 @@ a {
   display: block;
   z-index: 0;
   pointer-events: none;
-  opacity: var(--shape-opacity, 0.4);
-  /* Written by collide.ts when a shape has to move to clear text. */
+  /* No opacity. Black at 40% is grey, and there is no grey in this
+     palette. Lightness comes from ordered screens and from punching
+     holes in the cells — every pixel stays pure ink or pure paper. */
   transform: translateX(var(--avoid-shift, 0));
 }
 
@@ -385,7 +386,6 @@ a {
   width: 100%;
   background: var(--paper);
   color: var(--ink);
-  opacity: 0.4;
 }
 
 .plate-empty--4x3 {
@@ -409,15 +409,16 @@ a {
 /* Elements start hidden and are revealed by the IntersectionObserver
    in reveal.ts, which sets [data-revealed]. Without JS they stay
    visible — the :not(.js-ready) guard below handles that. */
+/* Slide only — no fade. Fading black text in from transparent walks
+   it through every grey on the way, which is precisely what this
+   palette does not have. */
 html.js-ready [data-reveal] {
-  opacity: 0;
-  transform: translateY(var(--reveal-shift, 6px));
-  transition: opacity 340ms var(--ease-mech), transform 340ms var(--ease-mech);
+  transform: translateY(var(--reveal-shift, 10px));
+  transition: transform 340ms var(--ease-mech);
   transition-delay: var(--reveal-delay, 0ms);
 }
 
 html.js-ready [data-reveal][data-revealed] {
-  opacity: 1;
   transform: none;
 }
 
@@ -440,9 +441,7 @@ html.js-ready [data-reveal="wipe"] {
     transition-duration: 0.001ms !important;
   }
   html.js-ready [data-reveal] {
-    opacity: 1;
     transform: none;
-    clip-path: none;
   }
 }
 
@@ -508,9 +507,6 @@ html.js-ready [data-reveal="wipe"] {
   mix-blend-mode: difference;
 }
 
-.cursor[data-on] {
-  opacity: 0.55;
-}
 
 .cursor[data-hot] {
   opacity: 1;

@@ -52,3 +52,17 @@ export interface FieldShape {
   spin?: number;
   zoom?: number;
 }
+
+/** The pen-drawn studies in Sketch.astro. */
+export type SketchType =
+  | "box"
+  | "box-hatch"
+  | "cylinder"
+  | "cone"
+  | "sphere"
+  | "plane"
+  | "ellipses"
+  | "spiral"
+  | "helix"
+  | "target"
+  | "chart";
