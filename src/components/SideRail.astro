@@ -1,0 +1,186 @@
+---
+/**
+ * SideRail — a vertical tick scale pinned to the page edge.
+ *
+ * It is a map of the document, not an ornament: a tick and label
+ * for every section, a travelling index mark showing where you
+ * are, and a percentage readout at the foot. Clicking a tick
+ * jumps. See src/lib/rail.ts for the behaviour.
+ */
+interface Props {
+  side: "left" | "right";
+}
+const { side } = Astro.props;
+---
+
+<div class={`rail rail--${side}`} data-rail>
+  <div class="rail__ticks" aria-hidden="true"></div>
+
+  {/* Section stops are injected by rail.ts once it can measure them. */}
+  <nav class="rail__marks" data-rail-marks aria-label={`Page map (${side})`}></nav>
+
+  <span class="rail__index" aria-hidden="true"></span>
+
+  <span class="rail__readout num" data-rail-readout aria-hidden="true">000</span>
+</div>
+
+<style>
+  .rail {
+    position: fixed;
+    top: 0;
+    bottom: 0;
+    width: 26px;
+    z-index: 2;
+    pointer-events: none;
+    /* set by rail.ts, 0%–100% */
+    --rail-pos: 0%;
+  }
+
+  .rail--left {
+    left: 0;
+  }
+  .rail--right {
+    right: 0;
+  }
+
+  /* --- the scale ------------------------------------------- */
+  .rail__ticks {
+    position: absolute;
+    inset: 0;
+    background-image:
+      repeating-linear-gradient(
+        to bottom,
+        var(--ink) 0 1px,
+        transparent 1px 40px
+      ),
+      repeating-linear-gradient(
+        to bottom,
+        var(--ink) 0 1px,
+        transparent 1px 8px
+      );
+    background-size:
+      11px 100%,
+      6px 100%;
+    background-repeat: no-repeat;
+    opacity: 0.55;
+  }
+  .rail--right .rail__ticks {
+    background-position:
+      100% 0,
+      100% 0;
+  }
+
+  /* --- section stops --------------------------------------- */
+  .rail__marks {
+    position: absolute;
+    inset: 0;
+    pointer-events: none;
+  }
+
+  .rail__stop {
+    position: absolute;
+    left: 0;
+    right: 0;
+    height: 0;
+    display: flex;
+    align-items: center;
+    gap: 3px;
+    pointer-events: auto;
+    text-decoration: none;
+    color: inherit;
+  }
+  .rail--right .rail__stop {
+    flex-direction: row-reverse;
+  }
+
+  .rail__stop :global(.rail__stopTick) {
+    display: block;
+    width: 18px;
+    height: 3px;
+    background: var(--ink);
+    flex: none;
+  }
+
+  /* The label is set sideways, running with the rail. */
+  .rail__stop :global(.rail__stopLabel) {
+    position: absolute;
+    top: 0;
+    left: 21px;
+    transform-origin: 0 50%;
+    transform: rotate(90deg) translateY(-50%);
+    font-size: 8px;
+    letter-spacing: var(--track-wide);
+    text-transform: uppercase;
+    white-space: nowrap;
+    opacity: 0;
+    transition: opacity var(--dur-base) var(--ease-mech);
+  }
+  .rail--right .rail__stop :global(.rail__stopLabel) {
+    left: auto;
+    right: 21px;
+    transform-origin: 100% 50%;
+    transform: rotate(-90deg) translateY(-50%);
+  }
+
+  .rail__stop[data-current] :global(.rail__stopLabel),
+  .rail__stop:hover :global(.rail__stopLabel),
+  .rail__stop:focus-visible :global(.rail__stopLabel) {
+    opacity: 1;
+  }
+
+  .rail__stop[data-current] :global(.rail__stopTick),
+  .rail__stop:hover :global(.rail__stopTick) {
+    width: 26px;
+    height: 5px;
+  }
+
+  /* --- the travelling index -------------------------------- */
+  .rail__index {
+    position: absolute;
+    left: 0;
+    width: 100%;
+    height: 1px;
+    top: var(--rail-pos);
+    background: var(--ink);
+  }
+
+  /* A solid block riding the line, like a cursor on a slide rule. */
+  .rail__index::after {
+    content: "";
+    position: absolute;
+    top: -4px;
+    left: 4px;
+    width: 9px;
+    height: 9px;
+    background: var(--ink);
+  }
+  .rail--right .rail__index::after {
+    left: auto;
+    right: 4px;
+  }
+
+  .rail__readout {
+    position: absolute;
+    bottom: var(--s-3);
+    left: 50%;
+    transform: translateX(-50%) rotate(90deg);
+    transform-origin: 50% 50%;
+    font-size: 9px;
+    letter-spacing: var(--track-wide);
+    opacity: 0.6;
+  }
+
+  /* Below this the gutters are too narrow to hold a rail without
+     crowding the text, so it simply is not there. */
+  @media (max-width: 68rem) {
+    .rail {
+      display: none;
+    }
+  }
+
+  @media print {
+    .rail {
+      display: none;
+    }
+  }
+</style>

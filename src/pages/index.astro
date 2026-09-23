@@ -1,0 +1,621 @@
+---
+import { existsSync, readdirSync } from "node:fs";
+import { getCollection } from "astro:content";
+import Base from "../layouts/Base.astro";
+import Photo from "../components/Photo.astro";
+import Plate from "../components/Plate.astro";
+import EntryRow from "../components/EntryRow.astro";
+import Ruler from "../components/Ruler.astro";
+import ToneScale from "../components/ToneScale.astro";
+import Mark from "../components/Mark.astro";
+import Marquee from "../components/Marquee.astro";
+import { site, ticker } from "../site";
+import { byDateDesc, publicOnly, shortStamp, stamp } from "../lib/format";
+
+const projects = publicOnly(await getCollection("projects"))
+  .sort(byDateDesc)
+  .sort((a, b) => Number(b.data.featured) - Number(a.data.featured))
+  .slice(0, 3);
+
+const posts = publicOnly(await getCollection("blog")).sort(byDateDesc).slice(0, 4);
+
+const ceramics = publicOnly(await getCollection("ceramics")).sort(byDateDesc);
+const wood = publicOnly(await getCollection("woodworking")).sort(byDateDesc);
+const studio = [...ceramics.slice(0, 2), ...wood.slice(0, 2)];
+
+/* The headshot. Drop any `portrait.*` into public/media/ and it is
+   picked up here at build time — no code change, no config. Until
+   then the hero holds an empty plate at the same proportions, so the
+   layout does not move when the photograph arrives. */
+const MEDIA = "public/media";
+const portrait = existsSync(MEDIA)
+  ? readdirSync(MEDIA)
+      .filter((f) => /^portrait\.(jpe?g|png|webp|avif)$/i.test(f))
+      .map((f) => `/media/${f}`)[0]
+  : undefined;
+
+---
+
+<Base section="Index — 00" ticker={false} description={site.description}>
+  {/* ============ THE POSTER =====================================
+      Three shapes far bigger than the viewport, the figure, and the
+      type — all on one sheet, all overlapping, none of it in a box.
+      ============================================================ */}
+  <section class="poster" id="poster" data-rail-label="Masthead">
+    <div class="poster__stage">
+      {/* The big object lives at the very left edge, out by the
+          rail and further left than the photograph, sitting behind
+          everything as a piece of the page rather than on top of it. */}
+      <span class="poster__edge" aria-hidden="true">
+        <Mark type="checker" height="100%" grid={22} seed={17} />
+      </span>
+
+      <figure class="poster__figure">
+        {
+          portrait ? (
+            <Photo src={portrait} alt={site.name} ratio="3/2" loading="eager" />
+          ) : (
+            <div class="plate-empty plate-empty--portrait">
+              <span class="label num">PORTRAIT</span>
+            </div>
+          )
+        }
+        <figcaption class="poster__whisper">the spiritual double</figcaption>
+      </figure>
+
+      <span class="poster__obj poster__obj--orbit" aria-hidden="true">
+        <Mark type="orbit" width="min(34vw, 300px)" grid={18} seed={3} />
+      </span>
+
+      <p class="poster__note poster__note--a label num">
+        LAT 37.4275<br />LON −122.1697
+      </p>
+      <p class="poster__note poster__note--b label num">
+        1-BIT · ATKINSON<br />PLATE 1/1
+      </p>
+
+      <h1 class="poster__name title title--xl">{site.name}</h1>
+
+      <p class="poster__role label label--wide">
+        {site.role} · {site.location} · {stamp(new Date())}
+      </p>
+    </div>
+
+    {/* The baseline, straight off the foot of the original sheet. */}
+    <div class="poster__base">
+      <Ruler step={8} major={5} height={16} numbered />
+      <Marquee items={ticker} class="poster__chain" />
+    </div>
+  </section>
+
+  {/* ============ STATEMENT ======================================= */}
+  <section class="page section" id="statement" data-rail-label="Statement">
+    <div class="statement">
+      <p class="statement__lede" data-reveal>
+        I make things and then I write about making them. Some of it is
+        screens. Some of it is clay. Some of it is a pile of walnut
+        offcuts that will eventually become a box.
+      </p>
+
+      <div class="columns statement__body" data-reveal>
+        <p>
+          This site is deliberately built out of two colours. Every
+          photograph you see has been thrown through a dithering
+          algorithm in your browser and reduced to pure black and pure
+          white — the same trick that let a 1984 Macintosh with no
+          greyscale at all pretend it had a camera.
+        </p>
+        <p>
+          What looks like grey is a lie your eye is telling you. Get
+          close to the screen and the illusion falls apart into a field
+          of dots; step back and a photograph reassembles itself. That
+          gap between what is there and what you see is more or less
+          the whole reason I like design.
+        </p>
+        <p>
+          Underneath the noise it is a plain, fast, accessible document.
+          Turn JavaScript off and you still get everything: the writing,
+          the work, the photographs, unprocessed. Nothing here moves on
+          its own — the page only moves when you do.
+        </p>
+      </div>
+    </div>
+
+    <span class="obj obj--statement" aria-hidden="true">
+      <Mark type="spiral" width="min(30vw, 260px)" grid={20} seed={41} />
+    </span>
+
+    <div class="statement__wedge" data-reveal>
+      <p class="label" style="margin-bottom: 0.6rem">Fig. 0.1 — Step wedge</p>
+      <ToneScale steps={12} pitch={6} height={40} />
+    </div>
+  </section>
+
+
+  {/* ============ WORK ============================================ */}
+  <section class="page section" id="work" data-rail-label="Work">
+    <div class="section__head">
+      <h2 class="label label--wide">
+        <span class="section__no num">02</span> Selected Work
+      </h2>
+      <a class="section__more label" href="/projects/" data-scramble>
+        All projects →
+      </a>
+    </div>
+
+    {
+      projects.length > 0 ? (
+        <div class="grid grid--3" data-reveal-group="90">
+          {projects.map((p, i) => (
+            <a class="card" href={`/projects/${p.id}/`} data-reveal>
+              <Plate
+                no={p.data.plate ?? `2.${i + 1}`}
+                caption={p.data.title}
+                meta={String(p.data.year)}
+                hover
+              >
+                {p.data.cover ? (
+                  <Photo src={p.data.cover} alt={p.data.coverAlt ?? ""} ratio="4/3" />
+                ) : (
+                  <div class="plate-empty plate-empty--4x3">
+                    <span class="label num">PLATE</span>
+                  </div>
+                )}
+              </Plate>
+              <p class="card__summary">{p.data.summary}</p>
+            </a>
+          ))}
+        </div>
+      ) : (
+        <p class="empty label">
+          No projects yet — add a markdown file to src/content/projects/.
+        </p>
+      )
+    }
+  </section>
+
+
+  {/* ============ WRITING ========================================= */}
+  <section class="page section" id="writing" data-rail-label="Writing">
+    <div class="section__head">
+      <h2 class="label label--wide">
+        <span class="section__no num">03</span> Recent Writing
+      </h2>
+      <a class="section__more label" href="/blog/" data-scramble>
+        All posts →
+      </a>
+    </div>
+
+    {
+      posts.length > 0 ? (
+        <ul class="rows" data-reveal-group="60">
+          {posts.map((post, i) => (
+            <EntryRow
+              href={`/blog/${post.id}/`}
+              no={`3.${i + 1}`}
+              title={post.data.title}
+              summary={post.data.summary}
+              date={shortStamp(post.data.date)}
+              tags={post.data.tags}
+            />
+          ))}
+        </ul>
+      ) : (
+        <p class="empty label">
+          No posts yet — add a markdown file to src/content/blog/.
+        </p>
+      )
+    }
+  </section>
+
+
+  {/* ============ STUDIO ========================================== */}
+  <section class="page section" id="studio" data-rail-label="Studio">
+    <div class="section__head">
+      <h2 class="label label--wide">
+        <span class="section__no num">04</span> Studio — Clay &amp; Wood
+      </h2>
+      <span class="label num section__more">
+        <a href="/ceramics/" data-scramble>Ceramics</a> ·
+        <a href="/woodworking/" data-scramble>Woodworking</a>
+      </span>
+    </div>
+
+    <Ruler step={8} major={5} height={12} />
+
+    <span class="obj obj--studio" aria-hidden="true">
+      <Mark type="stack" width="min(26vw, 220px)" grid={16} seed={23} />
+    </span>
+
+    {
+      studio.length > 0 ? (
+        <div class="grid grid--4" data-reveal-group="70">
+          {studio.map((item, i) => {
+            const isClay = "clay" in item.data;
+            const base = isClay ? "ceramics" : "woodworking";
+            return (
+              <a class="card card--tight" href={`/${base}/${item.id}/`} data-reveal>
+                <Plate no={`4.${i + 1}`} caption={item.data.title} hover>
+                  {item.data.cover ? (
+                    <Photo src={item.data.cover} alt={item.data.coverAlt ?? ""} ratio="1/1" />
+                  ) : (
+                    <div class="plate-empty plate-empty--1x1">
+                      <span class="label num">PLATE</span>
+                    </div>
+                  )}
+                </Plate>
+              </a>
+            );
+          })}
+        </div>
+      ) : (
+        <p class="empty label">
+          Nothing in the studio yet — add files to src/content/ceramics/ or
+          src/content/woodworking/.
+        </p>
+      )
+    }
+  </section>
+
+
+  {/* ============ CLOSING ========================================= */}
+  <section class="page section" id="close" data-rail-label="Contact">
+    <div class="closing">
+      <Plate no="0.2" caption="Plate reserved" meta="EMPTY">
+        <div class="plate-empty plate-empty--16x9">
+          <span class="label num">PLATE</span>
+        </div>
+      </Plate>
+
+      <div class="closing__note">
+        <p class="label" data-reveal>Say hello</p>
+        <p class="closing__big" data-reveal>
+          <a href={`mailto:${site.email}`} data-scramble="both">
+            {site.email}
+          </a>
+        </p>
+        <p class="closing__body" data-reveal>
+          I like talking about typography, glaze chemistry, hand tools,
+          and why early computer graphics looked the way they did. If
+          you want to work together, or just argue about Atkinson versus
+          Floyd–Steinberg, the inbox is open.
+        </p>
+      </div>
+    </div>
+  </section>
+</Base>
+
+<style>
+  /* ---------- the poster --------------------------------------
+     Nothing here is in a box. The shapes are larger than the
+     viewport on purpose: you are looking at a detail of something
+     bigger, which is what makes them read as objects rather than
+     icons. --------------------------------------------------- */
+
+  .poster {
+    position: relative;
+    overflow: hidden;
+    border-bottom: var(--hair);
+  }
+
+  .poster__stage {
+    position: relative;
+    max-width: var(--page-max);
+    margin-inline: auto;
+    padding: var(--s-16) var(--gutter) var(--s-8);
+    min-height: min(84vh, 46rem);
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+  }
+
+  /* Occasional objects, sized like a paragraph rather than like a
+     billboard. They sit in the page and scroll with it — no
+     parallax, no rotation, nothing that moves on its own. */
+  .poster__obj {
+    position: absolute;
+    display: block;
+    opacity: 0.8;
+    pointer-events: none;
+    z-index: 1;
+  }
+
+  .poster__obj--orbit {
+    right: -6%;
+    top: -4%;
+    opacity: 0.5;
+  }
+
+  .poster__obj--checker {
+    left: 2%;
+    bottom: 14%;
+  }
+
+  /* The object hangs off the left edge of the stage, out past the
+     page gutter so it nearly touches the rail, and runs the full
+     height of the block. z-index 0 keeps it behind the picture and
+     the type — it is part of the sheet, not a sticker on it. */
+  .poster__edge {
+    position: absolute;
+    top: 0;
+    bottom: 0;
+    left: calc(var(--gutter) * -1 + 26px);
+    display: flex;
+    align-items: center;
+    z-index: 0;
+    opacity: 0.55;
+    pointer-events: none;
+  }
+
+  .poster__edge :global(.mark) {
+    height: 100%;
+    width: auto;
+  }
+
+  /* Room on the left for it, so the photograph is not sitting on top
+     of the object it is meant to be next to. */
+  .poster__figure {
+    position: relative;
+    z-index: 2;
+    margin: 0 0 0 auto;
+    width: min(72%, 46rem);
+  }
+
+  /* The light, lowercase aside — the "the spiritual double" voice. */
+  .poster__whisper {
+    position: absolute;
+    right: -3rem;
+    top: 12%;
+    font-family: var(--font-serif);
+    font-size: clamp(0.9rem, 1.7vw, 1.5rem);
+    white-space: nowrap;
+    opacity: 0.9;
+  }
+
+  .poster__note {
+    position: absolute;
+    z-index: 3;
+    line-height: 1.5;
+    opacity: 0.7;
+  }
+  .poster__note--a {
+    left: var(--gutter);
+    bottom: 24%;
+  }
+  .poster__note--b {
+    right: var(--gutter);
+    top: 30%;
+    text-align: right;
+  }
+
+  .poster__name {
+    position: relative;
+    z-index: 3;
+    margin: var(--s-12) 0 var(--s-3) auto;
+    max-width: 22ch;
+  }
+
+  .poster__role {
+    position: relative;
+    z-index: 3;
+    text-align: right;
+    opacity: 0.75;
+  }
+
+  .poster__base {
+    position: relative;
+    z-index: 3;
+    padding-inline: var(--gutter);
+  }
+
+  .poster__chain {
+    padding-top: 0;
+    padding-bottom: var(--s-3);
+  }
+
+  @media (max-width: 52rem) {
+    .poster__stage {
+      min-height: 0;
+      padding-top: var(--s-8);
+    }
+    .poster__edge {
+      display: none;
+    }
+    .poster__figure {
+      width: 100%;
+    }
+    .poster__whisper {
+      right: auto;
+      left: 0;
+      top: auto;
+      bottom: -2rem;
+    }
+    .poster__note {
+      display: none;
+    }
+    .poster__obj--checker {
+      display: none;
+    }
+    .poster__name,
+    .poster__role {
+      margin-left: 0;
+      text-align: left;
+      width: 100%;
+    }
+  }
+
+  /* ---------- statement -------------------------------------- */
+  .statement {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr);
+    gap: var(--s-8);
+  }
+
+  .statement__lede {
+    font-size: var(--t-lg);
+    line-height: var(--lead-snug);
+    max-width: 24ch;
+    text-wrap: balance;
+  }
+
+  .statement__wedge {
+    margin-top: var(--s-12);
+    max-width: 44rem;
+  }
+
+  @media (min-width: 60rem) {
+    .statement {
+      grid-template-columns: 1fr 1.3fr;
+      gap: var(--s-16);
+      align-items: start;
+    }
+    .statement__lede {
+      position: sticky;
+      top: 5rem;
+    }
+  }
+
+  /* ---------- occasional objects ------------------------------
+     One per section at most, in the margin, at text scale. They are
+     punctuation, not weather. --------------------------------- */
+  .obj {
+    position: absolute;
+    display: block;
+    opacity: 0.75;
+    pointer-events: none;
+    z-index: 1;
+  }
+
+  .obj--statement {
+    right: 0;
+    top: 30%;
+  }
+  .obj--studio {
+    right: 2%;
+    top: -1rem;
+  }
+  .obj--close {
+    left: -1rem;
+    bottom: 4%;
+  }
+
+  @media (max-width: 52rem) {
+    .obj {
+      display: none;
+    }
+  }
+
+  /* ---------- section chrome ---------------------------------
+     No rules between sections on this page: a full-width hairline
+     every few screens turns one sheet back into a stack of bands,
+     which is exactly what the shapes are there to dissolve. The
+     z-index lifts the content clear of the field layer. */
+  .section {
+    border-top: 0;
+    z-index: 1;
+  }
+
+  .section__no {
+    opacity: 0.45;
+    margin-right: 0.8em;
+  }
+
+  .section__more a,
+  a.section__more {
+    text-decoration: none;
+    border-bottom: var(--hair);
+  }
+  .section__more a:hover,
+  a.section__more:hover {
+    background: var(--ink);
+    color: var(--paper);
+  }
+
+  .empty {
+    border: var(--rule) dashed var(--ink-40);
+    padding: var(--s-6);
+    text-align: center;
+    opacity: 0.7;
+  }
+
+  /* ---------- grids ------------------------------------------ */
+  .grid {
+    display: grid;
+    gap: var(--s-6);
+  }
+  .grid--3 {
+    grid-template-columns: repeat(auto-fit, minmax(16rem, 1fr));
+  }
+  .grid--4 {
+    grid-template-columns: repeat(auto-fit, minmax(11rem, 1fr));
+    margin-top: var(--s-6);
+  }
+
+  .card {
+    text-decoration: none;
+    display: block;
+  }
+
+  .card__summary {
+    margin-top: var(--s-3);
+    font-size: var(--t-sm);
+    line-height: var(--lead-body);
+    opacity: 0.85;
+  }
+
+  .card__blank {
+    aspect-ratio: 4 / 3;
+    display: grid;
+    place-items: center;
+    background-image: repeating-linear-gradient(
+      45deg,
+      var(--ink) 0 1px,
+      transparent 1px 7px
+    );
+    opacity: 0.5;
+  }
+
+  .rows {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+    border-top: var(--hair);
+  }
+
+  /* ---------- closing ---------------------------------------- */
+  .closing {
+    display: grid;
+    gap: var(--s-8);
+  }
+
+  @media (min-width: 60rem) {
+    .closing {
+      grid-template-columns: 1.4fr 1fr;
+      gap: var(--s-16);
+      align-items: center;
+    }
+  }
+
+  .closing__big {
+    font-size: var(--t-lg);
+    line-height: var(--lead-tight);
+    margin-block: var(--s-3);
+    word-break: break-word;
+  }
+
+  .closing__big a {
+    text-decoration: none;
+    border-bottom: var(--rule-thick) solid var(--ink);
+  }
+  .closing__big a:hover {
+    background: var(--ink);
+    color: var(--paper);
+  }
+
+  .closing__body {
+    font-size: var(--t-sm);
+    line-height: var(--lead-body);
+    max-width: 32rem;
+    opacity: 0.85;
+  }
+</style>

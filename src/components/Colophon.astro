@@ -1,0 +1,119 @@
+---
+/**
+ * Colophon — the back matter. Set like the last page of a book:
+ * how it was made, where else to find the author, and a tick rule
+ * to close the page off.
+ */
+import { links, site } from "../site";
+import Ruler from "./Ruler.astro";
+
+const year = new Date().getFullYear();
+const span = year > site.since ? `${site.since}–${year}` : `${site.since}`;
+---
+
+<footer class="colophon">
+  <Ruler step={8} major={5} height={12} flip />
+
+  <div class="page colophon__grid">
+    <div class="colophon__block">
+      <h2 class="label colophon__h">Colophon</h2>
+      <p class="colophon__body">
+        Titles set in <a href="https://int10h.org" rel="noopener">BigBlue
+        Terminal</a> by VileR, an 8×12 console face after the IBM EGA/VGA
+        charset, used under CC BY-SA 4.0. Everything else is the system
+        monospace. Photographs are black and white. Everything that is
+        not a photograph is drawn from two colours and a lot of straight
+        rules.
+      </p>
+    </div>
+
+    <div class="colophon__block">
+      <h2 class="label colophon__h">Elsewhere</h2>
+      <ul class="colophon__links">
+        {
+          links.map((link) => (
+            <li>
+              <a href={link.href} data-scramble>
+                {link.label}
+              </a>
+            </li>
+          ))
+        }
+      </ul>
+    </div>
+
+    <div class="colophon__block">
+      <h2 class="label colophon__h">Index</h2>
+      <p class="colophon__body num">
+        {site.name}<br />
+        {site.location}<br />
+        <a href={`mailto:${site.email}`} data-scramble>{site.email}</a>
+      </p>
+    </div>
+
+    <div class="colophon__block colophon__block--end">
+      <p class="label num colophon__stamp">
+        © {span}<br />
+        Built with Astro<br />
+        <span aria-hidden="true">▓▒░ 1-BIT ░▒▓</span>
+      </p>
+    </div>
+  </div>
+</footer>
+
+<style>
+  .colophon {
+    margin-top: var(--s-24);
+    border-top: var(--hair);
+    padding-bottom: var(--s-8);
+  }
+
+  .colophon__grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(13rem, 1fr));
+    gap: var(--s-8);
+    padding-top: var(--s-8);
+  }
+
+  .colophon__h {
+    margin-bottom: var(--s-3);
+    padding-bottom: var(--s-1);
+    border-bottom: var(--hair);
+  }
+
+  .colophon__body {
+    font-size: var(--t-sm);
+    line-height: var(--lead-body);
+    max-width: 28rem;
+  }
+
+  .colophon__links {
+    list-style: none;
+    padding: 0;
+    display: grid;
+    gap: var(--s-1);
+    font-size: var(--t-sm);
+  }
+
+  .colophon__links a,
+  .colophon__body a {
+    text-decoration: none;
+    border-bottom: var(--hair);
+  }
+
+  .colophon__links a:hover,
+  .colophon__body a:hover {
+    background: var(--ink);
+    color: var(--paper);
+  }
+
+  .colophon__block--end {
+    display: flex;
+    align-items: flex-end;
+  }
+
+  .colophon__stamp {
+    line-height: 1.8;
+    opacity: 0.7;
+  }
+</style>

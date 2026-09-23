@@ -1,0 +1,152 @@
+---
+/**
+ * Base — the document shell every page sits inside.
+ *
+ * Order matters here: the inline script in <head> runs before the
+ * first paint so the page never flashes the wrong polarity, and it
+ * sets `js-ready` so reveal animations only arm themselves when
+ * there is JavaScript to disarm them again.
+ */
+import "../styles/global.css";
+import { site, ticker } from "../site";
+import Masthead from "../components/Masthead.astro";
+import Colophon from "../components/Colophon.astro";
+import Grain from "../components/Grain.astro";
+import Marquee from "../components/Marquee.astro";
+import SideRail from "../components/SideRail.astro";
+
+interface Props {
+  title?: string;
+  description?: string;
+  /** Printed in the top-left running head of the page body. */
+  section?: string;
+  /** Hide the word-chain strip under the masthead. */
+  ticker?: boolean;
+  /** 0–1 paper grain. 0 removes it entirely. */
+  grain?: number;
+  class?: string;
+}
+
+const {
+  title,
+  description = site.description,
+  section,
+  ticker: showTicker = true,
+  grain = 0.11,
+  class: className = "",
+} = Astro.props;
+
+const fullTitle = title ? `${title} — ${site.name}` : site.name;
+
+const canonical = new URL(Astro.url.pathname, Astro.site ?? site.url).href;
+
+/* A 1-bit favicon. Built with string concatenation rather than a
+   nested template literal: Astro's frontmatter scanner mis-detects
+   the closing `---` fence when backticks nest inside `${}`. */
+const FAVICON_SVG =
+  '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 8 8" shape-rendering="crispEdges">' +
+  '<rect width="8" height="8" fill="#fff"/>' +
+  '<path fill="#000" d="M0 0h1v1H0zm2 0h1v1H2zm2 0h1v1H4zm2 0h1v1H6zM1 1h1v1H1zm2 0h1v1H3zm2 0h1v1H5zm2 0h1v1H7zM0 2h1v1H0zm4 0h1v1H4zm2 0h1v1H6zM1 3h1v1H1zm4 0h1v1H5zM0 4h1v1H0zm2 0h1v1H2zm4 0h1v1H6zM3 5h1v1H3zm4 0h1v1H7zM0 6h1v1H0zm4 0h1v1H4zM1 7h1v1H1zm4 0h1v1H5zm2 0h1v1H7z"/>' +
+  "</svg>";
+const favicon = "data:image/svg+xml," + encodeURIComponent(FAVICON_SVG);
+---
+
+<!doctype html>
+<html lang="en" data-invert="off">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>{fullTitle}</title>
+    <meta name="description" content={description} />
+    <link rel="canonical" href={canonical} />
+    <link rel="icon" href={favicon} />
+    <meta name="color-scheme" content="light dark" />
+
+    <meta property="og:type" content="website" />
+    <meta property="og:title" content={fullTitle} />
+    <meta property="og:description" content={description} />
+    <meta property="og:url" content={canonical} />
+    <meta name="twitter:card" content="summary_large_image" />
+
+    <link
+      rel="alternate"
+      type="application/rss+xml"
+      title={`${site.name} — Blog`}
+      href="/rss.xml"
+    />
+
+    {/* Runs before first paint. Keep it tiny and dependency-free. */}
+    <script is:inline>
+      (function () {
+        var root = document.documentElement;
+        root.classList.add("js-ready");
+        try {
+          var saved = localStorage.getItem("ap:invert");
+          if (saved === "on" || saved === "off") {
+            root.setAttribute("data-invert", saved);
+            return;
+          }
+        } catch (e) {
+          /* storage blocked; fall through to the system preference */
+        }
+        var dark =
+          window.matchMedia &&
+          window.matchMedia("(prefers-color-scheme: dark)").matches;
+        root.setAttribute("data-invert", dark ? "on" : "off");
+      })();
+    </script>
+  </head>
+
+  <body class={className}>
+    <a class="skip-link" href="#main">Skip to content</a>
+
+
+    <Grain opacity={grain} />
+
+    <SideRail side="left" />
+    <SideRail side="right" />
+
+    <Masthead />
+
+    {showTicker && <Marquee items={ticker} class="shell__ticker" />}
+
+    <main id="main" class="shell">
+      {
+        section && (
+          <div class="page shell__runhead">
+            <span class="label label--wide">{section}</span>
+            <span class="label num" aria-hidden="true">
+              {site.mark}
+            </span>
+          </div>
+        )
+      }
+      <slot />
+    </main>
+
+    <Colophon />
+
+    <script>
+      import "../lib/main";
+    </script>
+  </body>
+</html>
+
+<style is:global>
+  .shell {
+    position: relative;
+  }
+
+  .shell__ticker {
+    border-bottom: var(--hair);
+  }
+
+  .shell__runhead {
+    display: flex;
+    justify-content: space-between;
+    align-items: baseline;
+    padding-block: var(--s-2);
+    border-bottom: var(--hair);
+    opacity: 0.75;
+  }
+</style>

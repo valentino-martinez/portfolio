@@ -1,0 +1,101 @@
+/* ============================================================
+   TOKENS — one screw to turn for each decision.
+   The whole site is two colors. Everything that looks like a
+   gray is actually a dither pattern of those two colors.
+   ============================================================ */
+
+:root {
+  /* --- INK & PAPER ------------------------------------------ */
+  --paper: #ffffff;
+  --ink: #000000;
+
+  /* Derived. Never hardcode these elsewhere. */
+  --ink-05: color-mix(in srgb, var(--ink) 5%, var(--paper));
+  --ink-10: color-mix(in srgb, var(--ink) 10%, var(--paper));
+  --ink-20: color-mix(in srgb, var(--ink) 20%, var(--paper));
+  --ink-40: color-mix(in srgb, var(--ink) 40%, var(--paper));
+  --ink-60: color-mix(in srgb, var(--ink) 60%, var(--paper));
+  --ink-80: color-mix(in srgb, var(--ink) 80%, var(--paper));
+
+  /* --- RULES ------------------------------------------------ */
+  --rule: 1px;
+  --rule-thick: 3px;
+  --hair: var(--rule) solid var(--ink);
+  --hair-soft: var(--rule) solid var(--ink-40);
+
+  /* --- TYPE ------------------------------------------------- */
+  --font-mono: ui-monospace, "SF Mono", "SFMono-Regular", Menlo, Monaco,
+    "Cascadia Mono", "Roboto Mono", Consolas, "Liberation Mono", monospace;
+  --font-sans: "Helvetica Neue", Helvetica, Arial, system-ui, sans-serif;
+  /* Display: BigBlue Terminal, bundled in public/fonts/. Native cell
+     is 8×12, so size it in multiples of 12 — see `.title`. */
+  --font-display: "BigBlue Terminal", "BigBlue TerminalPlus",
+    "Px437 IBM VGA 8x14", "Perfect DOS VGA 437", ui-monospace,
+    "SF Mono", Menlo, Consolas, monospace;
+
+  /* One quiet serif, for the lowercase asides only. */
+  --font-serif: "Iowan Old Style", "Palatino Linotype", Palatino, Georgia,
+    "Times New Roman", serif;
+
+  /* A 1.2 scale, clamped so it survives phones and 4K. */
+  --t-xs: clamp(0.625rem, 0.6rem + 0.1vw, 0.6875rem);
+  --t-sm: clamp(0.6875rem, 0.66rem + 0.15vw, 0.8125rem);
+  --t-base: clamp(0.8125rem, 0.78rem + 0.2vw, 0.9375rem);
+  --t-md: clamp(1rem, 0.95rem + 0.3vw, 1.25rem);
+  --t-lg: clamp(1.5rem, 1.2rem + 1.4vw, 2.5rem);
+  --t-xl: clamp(2.25rem, 1.4rem + 4vw, 5rem);
+  --t-2xl: clamp(3rem, 1rem + 9vw, 9rem);
+
+  --lead-tight: 1.05;
+  --lead-snug: 1.25;
+  --lead-body: 1.55;
+
+  --track-wide: 0.18em;
+  --track-wider: 0.34em;
+
+  /* --- SPACE ------------------------------------------------ */
+  --s-1: 0.25rem;
+  --s-2: 0.5rem;
+  --s-3: 0.75rem;
+  --s-4: 1rem;
+  --s-6: 1.5rem;
+  --s-8: 2rem;
+  --s-12: 3rem;
+  --s-16: 4rem;
+  --s-24: 6rem;
+  --s-32: 8rem;
+
+  /* --- MEASURE & GRID --------------------------------------- */
+  --measure: 34rem;         /* ~66 characters of body copy      */
+  --page-max: 84rem;
+  --gutter: clamp(1rem, 3.5vw, 3.5rem);
+  --grid-unit: 8px;         /* everything snaps to this         */
+
+  /* --- MOTION ----------------------------------------------- */
+  --ease-mech: cubic-bezier(0.2, 0, 0, 1);      /* servo-like    */
+  --ease-snap: cubic-bezier(0.85, 0, 0.15, 1);  /* shutter       */
+  --dur-fast: 120ms;
+  --dur-base: 260ms;
+  --dur-slow: 700ms;
+
+  --z-grain: 9000;
+  --z-cursor: 9500;
+  --z-nav: 800;
+
+  color-scheme: light;
+}
+
+/* INVERT. The lo-fi dark mode: literally swap the two inks. */
+:root[data-invert="on"] {
+  --paper: #000000;
+  --ink: #ffffff;
+  color-scheme: dark;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root:not([data-invert="off"]) {
+    --paper: #000000;
+    --ink: #ffffff;
+    color-scheme: dark;
+  }
+}

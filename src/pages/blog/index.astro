@@ -1,0 +1,61 @@
+---
+import { getCollection } from "astro:content";
+import Base from "../../layouts/Base.astro";
+import SectionHead from "../../components/SectionHead.astro";
+import EntryRow from "../../components/EntryRow.astro";
+import { byDateDesc, publicOnly, shortStamp, readMinutes } from "../../lib/format";
+
+const posts = publicOnly(await getCollection("blog")).sort(byDateDesc);
+
+---
+
+<Base
+  title="Blog"
+  section="Blog — 03"
+  description="Writing about design, dithering, clay, wood, and making things slowly."
+>
+  <SectionHead
+    index="03"
+    title="Blog"
+    kicker="Writing"
+    count={`${posts.length} ${posts.length === 1 ? "entry" : "entries"}`}
+    lede="Long notes and short ones. Mostly about design, sometimes about a kiln, occasionally about why a joint failed."
+  />
+
+  <div class="page">
+    {
+      posts.length > 0 ? (
+        <ul class="rows" data-reveal-group="55">
+          {posts.map((post, i) => (
+            <EntryRow
+              href={`/blog/${post.id}/`}
+              no={`3.${i + 1}`}
+              title={post.data.title}
+              summary={post.data.summary}
+              date={shortStamp(post.data.date)}
+              tags={post.data.tags}
+              note={`${post.data.minutes ?? readMinutes(post.body)} MIN`}
+            />
+          ))}
+        </ul>
+      ) : (
+        <p class="empty label">Nothing published yet.</p>
+      )
+    }
+  </div>
+</Base>
+
+<style>
+  .rows {
+    list-style: none;
+    padding: 0;
+    margin: 0 0 var(--s-16);
+    border-top: var(--hair);
+  }
+  .empty {
+    border: var(--rule) dashed var(--ink-40);
+    padding: var(--s-8);
+    text-align: center;
+    opacity: 0.7;
+  }
+</style>

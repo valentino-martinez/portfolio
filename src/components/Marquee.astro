@@ -1,0 +1,128 @@
+---
+/**
+ * Marquee — a word chain, set like the tick-scale caption running
+ * along the bottom of the Greiman poster.
+ *
+ * STATIC by default: it is a printed line, not a news ticker. Pass
+ * `scroll` if you want it to crawl, in which case the track is
+ * rendered twice and translated by exactly -50% so the loop is
+ * seamless with no measuring in JS. The duplicate is always hidden
+ * from assistive tech so the phrase isn't announced twice.
+ */
+interface Props {
+  items: readonly string[];
+  /** Let it crawl. Off by default — ambient motion competes with
+   *  the photographs, which are the loud thing on the page. */
+  scroll?: boolean;
+  /** Seconds for one full pass, when scrolling. Bigger = slower. */
+  duration?: number;
+  reverse?: boolean;
+  separator?: string;
+  class?: string;
+}
+const {
+  items,
+  scroll = false,
+  duration = 90,
+  reverse = false,
+  separator = ".",
+  class: className = "",
+} = Astro.props;
+---
+
+<div
+  class:list={["marquee", scroll && "marquee--scroll", className]}
+  style={`--duration:${duration}s; --dir:${reverse ? "reverse" : "normal"}`}
+>
+  <div class="marquee__track">
+    <span class="marquee__set label label--wide">
+      {
+        items.map((item) => (
+          <>
+            <span class="marquee__item">{item}</span>
+            <span class="marquee__sep" aria-hidden="true">
+              {separator}
+            </span>
+          </>
+        ))
+      }
+    </span>
+    <span class="marquee__set label label--wide" aria-hidden="true">
+      {
+        items.map((item) => (
+          <>
+            <span class="marquee__item">{item}</span>
+            <span class="marquee__sep">{separator}</span>
+          </>
+        ))
+      }
+    </span>
+  </div>
+</div>
+
+<style>
+  .marquee {
+    overflow: hidden;
+    white-space: nowrap;
+    padding-block: var(--s-2);
+    -webkit-mask-image: linear-gradient(
+      to right,
+      transparent,
+      #000 4rem,
+      #000 calc(100% - 4rem),
+      transparent
+    );
+    mask-image: linear-gradient(
+      to right,
+      transparent,
+      #000 4rem,
+      #000 calc(100% - 4rem),
+      transparent
+    );
+  }
+
+  .marquee__track {
+    display: flex;
+    width: max-content;
+  }
+
+  /* Static: the second copy is dead weight, so it does not paint. */
+  .marquee:not(.marquee--scroll) .marquee__set:nth-child(2) {
+    display: none;
+  }
+
+  .marquee--scroll .marquee__track {
+    animation: marquee var(--duration) linear infinite;
+    animation-direction: var(--dir);
+  }
+
+  .marquee--scroll:hover .marquee__track {
+    animation-play-state: paused;
+  }
+
+  .marquee__set {
+    display: flex;
+    align-items: center;
+    flex: none;
+  }
+
+  .marquee__item {
+    padding-inline: 0.45em;
+  }
+
+  .marquee__sep {
+    opacity: 0.55;
+  }
+
+  @keyframes marquee {
+    to {
+      transform: translate3d(-50%, 0, 0);
+    }
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .marquee--scroll .marquee__track {
+      animation: none;
+    }
+  }
+</style>

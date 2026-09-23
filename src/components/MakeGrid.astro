@@ -1,0 +1,79 @@
+---
+/**
+ * MakeGrid — the shared index grid for physical work (ceramics,
+ * woodworking). Both collections describe the same thing: an object,
+ * some materials, and where it ended up, so they share a template.
+ */
+import Plate from "./Plate.astro";
+import Photo from "./Photo.astro";
+import type { MakeItem } from "../lib/types";
+
+interface Props {
+  items: MakeItem[];
+  empty?: string;
+}
+
+const {
+  items,
+  empty = "Nothing here yet.",
+} = Astro.props;
+---
+
+{
+  items.length > 0 ? (
+    <div class="makes" data-reveal-group="80">
+      {items.map((item) => (
+        <a class="make" href={item.href} data-reveal>
+          <Plate no={item.no} caption={item.title} meta={item.status} hover>
+            {item.cover ? (
+              <Photo src={item.cover} alt={item.coverAlt ?? ""} ratio="1/1" />
+            ) : (
+              <div class="plate-empty plate-empty--1x1">
+                <span class="label num">PLATE</span>
+              </div>
+            )}
+          </Plate>
+
+          <p class="make__summary">{item.summary}</p>
+          {item.specs.length > 0 && (
+            <p class="label make__specs">{item.specs.join(" · ")}</p>
+          )}
+        </a>
+      ))}
+    </div>
+  ) : (
+    <p class="empty label">{empty}</p>
+  )
+}
+
+<style>
+  .makes {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(15rem, 1fr));
+    gap: var(--s-8);
+    margin-bottom: var(--s-16);
+  }
+
+  .make {
+    text-decoration: none;
+    display: block;
+  }
+
+  .make__summary {
+    margin-top: var(--s-3);
+    font-size: var(--t-sm);
+    line-height: var(--lead-body);
+  }
+
+  .make__specs {
+    margin-top: var(--s-2);
+    opacity: 0.6;
+  }
+
+  .empty {
+    border: var(--rule) dashed var(--ink-40);
+    padding: var(--s-8);
+    text-align: center;
+    opacity: 0.7;
+  }
+</style>

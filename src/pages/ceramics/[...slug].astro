@@ -1,0 +1,47 @@
+---
+import { getCollection, render, type CollectionEntry } from "astro:content";
+import Entry from "../../layouts/Entry.astro";
+import { byDateDesc, publicOnly } from "../../lib/format";
+
+export async function getStaticPaths() {
+  const pots = publicOnly(await getCollection("ceramics")).sort(byDateDesc);
+  return pots.map((pot, i) => ({
+    params: { slug: pot.id },
+    props: { pot, prev: pots[i - 1] ?? null, next: pots[i + 1] ?? null },
+  }));
+}
+
+type Props = {
+  pot: CollectionEntry<"ceramics">;
+  prev: CollectionEntry<"ceramics"> | null;
+  next: CollectionEntry<"ceramics"> | null;
+};
+
+const { pot, prev, next } = Astro.props as Props;
+const { Content } = await render(pot);
+const d = pot.data;
+
+const specs = [
+  d.clay ? { label: "Clay", value: d.clay } : null,
+  d.glaze ? { label: "Glaze", value: d.glaze } : null,
+  d.firing ? { label: "Firing", value: d.firing } : null,
+  d.dimensions ? { label: "Size", value: d.dimensions } : null,
+  { label: "Status", value: d.status.replace("-", " ") },
+].filter((row): row is { label: string; value: string } => row !== null);
+---
+
+<Entry
+  title={d.title}
+  summary={d.summary}
+  section="Ceramics — 04"
+  date={d.date}
+  updated={d.updated}
+  tags={d.tags}
+  specs={specs}
+  backHref="/ceramics/"
+  backLabel="All ceramics"
+  prev={prev ? { href: `/ceramics/${prev.id}/`, title: prev.data.title } : null}
+  next={next ? { href: `/ceramics/${next.id}/`, title: next.data.title } : null}
+>
+  <Content />
+</Entry>

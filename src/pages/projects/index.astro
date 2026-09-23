@@ -1,0 +1,100 @@
+---
+import { getCollection } from "astro:content";
+import Base from "../../layouts/Base.astro";
+import SectionHead from "../../components/SectionHead.astro";
+import Plate from "../../components/Plate.astro";
+import Photo from "../../components/Photo.astro";
+import { byDateDesc, publicOnly } from "../../lib/format";
+
+const projects = publicOnly(await getCollection("projects"))
+  .sort(byDateDesc)
+  .sort((a, b) => Number(b.data.featured) - Number(a.data.featured));
+
+---
+
+<Base
+  title="Projects"
+  section="Projects — 02"
+  description="Selected design and build work."
+>
+  <SectionHead
+    index="02"
+    title="Projects"
+    kicker="Work"
+    count={`${projects.length} ${projects.length === 1 ? "plate" : "plates"}`}
+    lede="Things I designed, built, or both. Each one is here because I learned something making it."
+  />
+
+  <div class="page">
+    {
+      projects.length > 0 ? (
+        <div class="grid" data-reveal-group="80">
+          {projects.map((p, i) => (
+            <a class="card" href={`/projects/${p.id}/`} data-reveal>
+              <Plate
+                no={p.data.plate ?? `2.${i + 1}`}
+                caption={p.data.title}
+                meta={String(p.data.year)}
+                hover
+              >
+                {p.data.cover ? (
+                  <Photo src={p.data.cover} alt={p.data.coverAlt ?? ""} ratio="4/3" />
+                ) : (
+                  <div class="plate-empty plate-empty--4x3">
+                    <span class="label num">PLATE</span>
+                  </div>
+                )}
+              </Plate>
+
+              <div class="card__meta">
+                <p class="card__summary">{p.data.summary}</p>
+                <p class="label card__specs">
+                  {[p.data.role, p.data.context, ...p.data.tools]
+                    .filter(Boolean)
+                    .join(" · ")}
+                </p>
+              </div>
+            </a>
+          ))}
+        </div>
+      ) : (
+        <p class="empty label">No projects yet.</p>
+      )
+    }
+  </div>
+</Base>
+
+<style>
+  .grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(18rem, 1fr));
+    gap: var(--s-8);
+    margin-bottom: var(--s-16);
+  }
+
+  .card {
+    text-decoration: none;
+    display: block;
+  }
+
+  .card__meta {
+    margin-top: var(--s-3);
+  }
+
+  .card__summary {
+    font-size: var(--t-sm);
+    line-height: var(--lead-body);
+  }
+
+  .card__specs {
+    margin-top: var(--s-2);
+    opacity: 0.6;
+  }
+
+  .empty {
+    border: var(--rule) dashed var(--ink-40);
+    padding: var(--s-8);
+    text-align: center;
+    opacity: 0.7;
+  }
+</style>

@@ -1,0 +1,146 @@
+---
+/**
+ * EntryRow — one line in an index. The whole row is the hit target
+ * and inverts on hover, which in a two-colour system reads as
+ * strongly as any highlight colour would.
+ */
+interface Props {
+  href: string;
+  no: string;
+  title: string;
+  summary?: string;
+  date?: string;
+  tags?: string[];
+  /** Small right-hand note: read time, materials, status. */
+  note?: string;
+}
+const { href, no, title, summary, date, tags = [], note } = Astro.props;
+---
+
+<li class="row" data-reveal>
+  <a class="row__link" href={href}>
+    <span class="row__no num" aria-hidden="true">{no}</span>
+
+    <span class="row__main">
+      <span class="row__title" data-scramble>{title}</span>
+      {summary && <span class="row__summary">{summary}</span>}
+      {
+        tags.length > 0 && (
+          <span class="row__tags label" aria-hidden="true">
+            {tags.map((t) => (
+              <span class="row__tag">{t}</span>
+            ))}
+          </span>
+        )
+      }
+    </span>
+
+    <span class="row__meta label num">
+      {date && <span>{date}</span>}
+      {note && <span class="row__note">{note}</span>}
+      <span class="row__arrow" aria-hidden="true">→</span>
+    </span>
+  </a>
+</li>
+
+<style>
+  .row {
+    border-bottom: var(--hair);
+    list-style: none;
+  }
+
+  .row__link {
+    display: grid;
+    grid-template-columns: 3.5rem 1fr auto;
+    gap: var(--s-4);
+    align-items: baseline;
+    padding: var(--s-4) var(--s-2);
+    text-decoration: none;
+    transition: background-color var(--dur-fast) var(--ease-mech),
+      color var(--dur-fast) var(--ease-mech),
+      padding-left var(--dur-base) var(--ease-mech);
+  }
+
+  .row__link:hover,
+  .row__link:focus-visible {
+    background: var(--ink);
+    color: var(--paper);
+    padding-left: var(--s-4);
+  }
+
+  .row__no {
+    font-size: var(--t-xs);
+    opacity: 0.5;
+    letter-spacing: var(--track-wide);
+  }
+  .row__link:hover .row__no {
+    opacity: 0.8;
+  }
+
+  .row__main {
+    display: block;
+    min-width: 0;
+  }
+
+  .row__title {
+    display: block;
+    font-size: var(--t-md);
+    line-height: var(--lead-snug);
+    text-transform: uppercase;
+    letter-spacing: 0.01em;
+    font-weight: 700;
+  }
+
+  .row__summary {
+    display: block;
+    margin-top: var(--s-2);
+    font-size: var(--t-sm);
+    line-height: var(--lead-body);
+    max-width: var(--measure);
+    opacity: 0.85;
+  }
+
+  .row__tags {
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--s-2);
+    margin-top: var(--s-3);
+    opacity: 0.7;
+  }
+
+  .row__tag::before {
+    content: "▪ ";
+  }
+
+  .row__meta {
+    display: flex;
+    align-items: baseline;
+    gap: var(--s-3);
+    white-space: nowrap;
+    opacity: 0.7;
+  }
+  .row__link:hover .row__meta {
+    opacity: 1;
+  }
+
+  .row__arrow {
+    display: inline-block;
+    transition: transform var(--dur-base) var(--ease-mech);
+  }
+  .row__link:hover .row__arrow {
+    transform: translateX(4px);
+  }
+
+  @media (max-width: 40rem) {
+    .row__link {
+      grid-template-columns: 2.5rem 1fr;
+    }
+    .row__meta {
+      grid-column: 2;
+      margin-top: var(--s-2);
+    }
+    .row__note {
+      display: none;
+    }
+  }
+</style>

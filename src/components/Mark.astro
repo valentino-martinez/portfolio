@@ -1,0 +1,229 @@
+---
+/**
+ * Mark — the drawn objects from the Greiman spread, built out of
+ * square tiles instead of smooth strokes.
+ *
+ * Every shape is defined parametrically and then *rasterised onto a
+ * coarse grid at build time*: we walk the curve, mark whichever cell
+ * each sample lands in, and emit one <rect> per cell. So an ellipse
+ * is not a smooth ellipse — it is the blocks an ellipse would light
+ * up on a very low-resolution screen, which is the same logic the
+ * bitmap type and the dithered photographs are built on.
+ *
+ * Pure build-time geometry with a seeded PRNG: same markup every
+ * build, no image requests, inverts with the page.
+ *
+ *   <Mark type="orbit" width="140px" grid={14} />
+ *
+ * `width` takes any CSS length, so a mark can be a 40px dingbat or
+ * a shape that bleeds off both edges of the screen. Drop `grid` as
+ * you go bigger: the tiles should stay large and countable, not
+ * dissolve into a fine screen.
+ */
+import type { MarkType } from "../lib/types";
+
+interface Props {
+  type: MarkType;
+  /** Any CSS length. The mark is square, so height follows. */
+  width?: string;
+  /** Size from the height instead — e.g. "100%" to match a sibling.
+   *  Takes precedence over `width`. */
+  height?: string;
+  /** Deterministic variation — same seed, same mark, every build. */
+  seed?: number;
+  /** Cells across. Lower = chunkier. Go coarse when you go large. */
+  grid?: number;
+  class?: string;
+}
+
+const {
+  type,
+  width = "96px",
+  height,
+  seed = 1,
+  grid = 22,
+  class: className = "",
+} = Astro.props;
+
+const N = Math.max(6, grid);
+/* Square cells with a gutter: these read as drawn marks. Solid,
+   gutterless mass is the display face's job (src/lib/blockfont.ts),
+   not these. */
+const CELL = 10;
+const GAP = 1.6;
+const SPAN = N * CELL;
+const MID = (N - 1) / 2;
+
+/* Deterministic PRNG. Math.random() would redraw every mark on every
+   build, which makes diffs and caching miserable. */
+function rng(s: number) {
+  let x = (s * 1664525 + 1013904223) >>> 0;
+  return () => {
+    x ^= x << 13; x >>>= 0;
+    x ^= x >> 17;
+    x ^= x << 5;  x >>>= 0;
+    return x / 4294967296;
+  };
+}
+const rand = rng(seed || 1);
+
+/* ---- the rasteriser ----------------------------------------- */
+
+const on = new Set<number>();
+const plot = (x: number, y: number) => {
+  const gx = Math.round(x);
+  const gy = Math.round(y);
+  if (gx >= 0 && gx < N && gy >= 0 && gy < N) on.add(gy * N + gx);
+};
+
+function walkEllipse(rx: number, ry: number, rotDeg: number) {
+  const rot = (rotDeg * Math.PI) / 180;
+  const c = Math.cos(rot);
+  const s = Math.sin(rot);
+  // Oversample so no cell is skipped on the flat parts of the curve.
+  const steps = Math.ceil(Math.max(rx, ry) * 24);
+  for (let i = 0; i < steps; i++) {
+    const t = (i / steps) * Math.PI * 2;
+    const x = Math.cos(t) * rx;
+    const y = Math.sin(t) * ry;
+    plot(MID + x * c - y * s, MID + x * s + y * c);
+  }
+}
+
+function walkLine(x0: number, y0: number, x1: number, y1: number) {
+  const steps = Math.ceil(Math.hypot(x1 - x0, y1 - y0) * 3) || 1;
+  for (let i = 0; i <= steps; i++) {
+    plot(x0 + ((x1 - x0) * i) / steps, y0 + ((y1 - y0) * i) / steps);
+  }
+}
+
+function fillRect(x0: number, y0: number, w: number, h: number) {
+  for (let y = y0; y < y0 + h; y++) {
+    for (let x = x0; x < x0 + w; x++) plot(x, y);
+  }
+}
+
+/* ---- the shapes ---------------------------------------------- */
+
+const R = MID - 0.5;
+
+switch (type) {
+  case "orbit": {
+    for (let i = 0; i < 4; i++) {
+      const rx = R - i * 1.9;
+      walkEllipse(rx, rx * (0.26 + rand() * 0.24), -30 + i * 26 + rand() * 14);
+    }
+    break;
+  }
+
+  case "ring": {
+    walkEllipse(R, R * (0.34 + rand() * 0.2), -22 + rand() * 34);
+    break;
+  }
+
+  case "spiral": {
+    const turns = 3.2;
+    const steps = 1400;
+    for (let i = 0; i <= steps; i++) {
+      const th = (i / steps) * turns * Math.PI * 2;
+      const r = (i / steps) * R;
+      plot(MID + Math.cos(th) * r, MID + Math.sin(th) * r);
+    }
+    break;
+  }
+
+  case "target": {
+    walkEllipse(R, R, 0);
+    walkEllipse(R * 0.52, R * 0.52, 0);
+    walkLine(MID, 0, MID, N - 1);
+    walkLine(0, MID, N - 1, MID);
+    fillRect(Math.round(MID) - 1, Math.round(MID) - 1, 2, 2);
+    break;
+  }
+
+  case "bars": {
+    // A tick chart: columns under a lobed envelope.
+    for (let x = 0; x < N; x++) {
+      const t = x / (N - 1);
+      const env = Math.pow(Math.sin(t * Math.PI), 0.6);
+      const h = Math.max(1, Math.round(env * (N - 2) * (0.45 + rand() * 0.55)));
+      for (let y = 0; y < h; y++) plot(x, N - 1 - y);
+    }
+    break;
+  }
+
+  case "stack": {
+    // A staircase of solid squares, each tread smaller than the last.
+    let x = 0;
+    let y = N - 1;
+    let s = Math.max(2, Math.round(N * 0.3));
+    while (s >= 1 && x < N && y - s >= -1) {
+      fillRect(Math.round(x), Math.round(y - s + 1), s, s);
+      x += s * 0.85;
+      y -= s * 0.5;
+      s -= 1;
+    }
+    break;
+  }
+
+  case "checker": {
+    // A checkerboard losing its grip left to right.
+    for (let y = 0; y < N; y++) {
+      for (let x = 0; x < N; x++) {
+        const keep = 1 - x / (N - 1);
+        if ((x + y) % 2 === 0 && rand() < keep * 1.2) plot(x, y);
+      }
+    }
+    break;
+  }
+
+  case "dots": {
+    for (let y = 0; y < N; y++) {
+      for (let x = 0; x < N; x++) {
+        const keep = 1 - x / (N - 1);
+        if (rand() < keep * keep * 1.25) plot(x, y);
+      }
+    }
+    break;
+  }
+}
+
+const tiles = [...on].map((i) => ({
+  x: (i % N) * CELL,
+  y: Math.floor(i / N) * CELL,
+}));
+---
+
+<svg
+  class:list={["mark", `mark--${type}`, className]}
+  style={height ? `height:${height};width:auto` : `width:${width}`}
+  viewBox={`0 0 ${SPAN} ${SPAN}`}
+  aria-hidden="true"
+  focusable="false"
+  shape-rendering="crispEdges"
+>
+  {
+    tiles.map((t) => (
+      <rect
+        x={t.x}
+        y={t.y}
+        width={CELL - GAP}
+        height={CELL - GAP}
+        fill="currentColor"
+      />
+    ))
+  }
+</svg>
+
+<style>
+  .mark {
+    display: block;
+    color: inherit;
+    flex: none;
+    max-width: 100%;
+    /* Every generated mark is square. Stating it means `height: X;
+       width: auto` resolves — without it the width collapses to 0
+       inside a flex or absolutely positioned box. */
+    aspect-ratio: 1 / 1;
+  }
+</style>

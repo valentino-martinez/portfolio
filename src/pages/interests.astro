@@ -1,0 +1,206 @@
+---
+import { getCollection } from "astro:content";
+import Base from "../layouts/Base.astro";
+import SectionHead from "../components/SectionHead.astro";
+import Marquee from "../components/Marquee.astro";
+import { shortStamp } from "../lib/format";
+
+const all = (await getCollection("interests")).filter(
+  (i) => import.meta.env.DEV || !i.data.draft
+);
+
+const ORDER = ["reading", "listening", "watching", "playing", "other"] as const;
+const TITLES: Record<string, string> = {
+  reading: "Reading",
+  listening: "Listening",
+  watching: "Watching",
+  playing: "Playing",
+  other: "Rabbit holes",
+};
+
+const groups = ORDER.map((kind) => ({
+  kind,
+  title: TITLES[kind]!,
+  items: all
+    .filter((i) => i.data.kind === kind)
+    .sort(
+      (a, b) =>
+        (b.data.date?.valueOf() ?? 0) - (a.data.date?.valueOf() ?? 0)
+    ),
+})).filter((g) => g.items.length > 0);
+
+/** 3 → "███░░" */
+const bar = (n: number | undefined) =>
+  n === undefined ? "" : "█".repeat(Math.round(n)) + "░".repeat(5 - Math.round(n));
+
+const chain = all.map((i) => i.data.title);
+
+---
+
+<Base
+  title="Interests"
+  section="Interests — 06"
+  description="Things I am reading, listening to, watching, and falling down holes about."
+>
+  <SectionHead
+    index="06"
+    title="Interests"
+    kicker="Inputs"
+    count={`${all.length} entries`}
+    lede="An unsorted pile of the things currently taking up room in my head. Updated when I remember."
+  />
+
+  {chain.length > 0 && <Marquee items={chain} duration={90} separator="·" />}
+
+  <div class="page interests">
+    {
+      groups.map((group, gi) => (
+        <section class="group">
+          <h2 class="group__h label label--wide">
+            <span class="group__no num">{`6.${gi + 1}`}</span>
+            {group.title}
+          </h2>
+
+          <ul class="cards" data-reveal-group="50">
+            {group.items.map((item) => {
+              const Tag = item.data.href ? "a" : "div";
+              return (
+                <li data-reveal>
+                  <Tag
+                    class="card"
+                    href={item.data.href}
+                    rel={item.data.href ? "noopener noreferrer" : undefined}
+                    target={item.data.href ? "_blank" : undefined}
+                  >
+                    <span class="card__top">
+                      <span class="card__title">{item.data.title}</span>
+                      {item.data.href && (
+                        <span class="card__ext" aria-hidden="true">
+                          ↗
+                        </span>
+                      )}
+                    </span>
+                    {item.data.note && (
+                      <span class="card__note">{item.data.note}</span>
+                    )}
+                    <span class="card__foot label num">
+                      {item.data.rating !== undefined && (
+                        <span
+                          class="card__bar"
+                          aria-label={`${item.data.rating} out of 5`}
+                        >
+                          {bar(item.data.rating)}
+                        </span>
+                      )}
+                      {item.data.date && <span>{shortStamp(item.data.date)}</span>}
+                    </span>
+                  </Tag>
+                </li>
+              );
+            })}
+          </ul>
+        </section>
+      ))
+    }
+
+    {
+      groups.length === 0 && (
+        <p class="empty label">
+          Nothing here yet — add files to src/content/interests/.
+        </p>
+      )
+    }
+  </div>
+</Base>
+
+<style>
+  .interests {
+    padding-top: var(--s-8);
+    padding-bottom: var(--s-16);
+  }
+
+  .group {
+    margin-bottom: var(--s-12);
+  }
+
+  .group__h {
+    padding-bottom: var(--s-2);
+    border-bottom: var(--rule-thick) solid var(--ink);
+    margin-bottom: var(--s-4);
+  }
+
+  .group__no {
+    opacity: 0.45;
+    margin-right: 0.8em;
+  }
+
+  .cards {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(16rem, 1fr));
+    gap: var(--s-4);
+  }
+
+  .card {
+    display: flex;
+    flex-direction: column;
+    gap: var(--s-2);
+    height: 100%;
+    border: var(--hair);
+    padding: var(--s-4);
+    text-decoration: none;
+    transition: background-color var(--dur-fast) var(--ease-mech),
+      color var(--dur-fast) var(--ease-mech),
+      transform var(--dur-fast) var(--ease-mech);
+  }
+
+  a.card:hover,
+  a.card:focus-visible {
+    background: var(--ink);
+    color: var(--paper);
+    transform: translate(-2px, -2px);
+  }
+
+  .card__top {
+    display: flex;
+    justify-content: space-between;
+    gap: var(--s-3);
+    align-items: baseline;
+  }
+
+  .card__title {
+    font-size: var(--t-base);
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.01em;
+    line-height: var(--lead-snug);
+  }
+
+  .card__note {
+    font-size: var(--t-sm);
+    line-height: var(--lead-body);
+    opacity: 0.85;
+    flex: 1 1 auto;
+  }
+
+  .card__foot {
+    display: flex;
+    justify-content: space-between;
+    gap: var(--s-3);
+    opacity: 0.6;
+    margin-top: auto;
+  }
+
+  .card__bar {
+    letter-spacing: -0.05em;
+  }
+
+  .empty {
+    border: var(--rule) dashed var(--ink-40);
+    padding: var(--s-8);
+    text-align: center;
+    opacity: 0.7;
+  }
+</style>

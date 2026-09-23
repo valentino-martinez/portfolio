@@ -1,0 +1,101 @@
+---
+import Base from "../layouts/Base.astro";
+import Plate from "../components/Plate.astro";
+import { nav } from "../site";
+---
+
+<Base title="404" section="Error — 404" description="Page not found.">
+  <div class="page lost">
+    <div class="lost__text">
+      <h1 class="lost__code title">404</h1>
+      <p class="lost__lede">
+        Signal lost. There is nothing at this address — or there was,
+        and it has been overwritten.
+      </p>
+
+      <ul class="lost__nav">
+        {
+          nav.map((item) => (
+            <li>
+              <a href={item.href} data-scramble>
+                <span class="num">{item.index}</span> {item.label}
+              </a>
+            </li>
+          ))
+        }
+      </ul>
+    </div>
+
+    <Plate no="X.0" caption="No signal" meta="ERR">
+      <div class="plate-empty plate-empty--4x3">
+        <span class="label num">NO SIGNAL</span>
+      </div>
+    </Plate>
+  </div>
+</Base>
+
+<style>
+  .lost {
+    display: grid;
+    gap: var(--s-12);
+    padding-block: var(--s-16);
+    align-items: center;
+  }
+
+  @media (min-width: 58rem) {
+    .lost {
+      grid-template-columns: 1fr 1fr;
+      gap: var(--s-16);
+    }
+  }
+
+  .lost__code {
+    margin: 0 0 var(--s-6);
+    font-size: 96px;
+  }
+
+  @media (max-width: 40rem) {
+    .lost__code {
+      font-size: 60px;
+    }
+  }
+
+  .lost__lede {
+    font-size: var(--t-md);
+    line-height: var(--lead-snug);
+    max-width: 30ch;
+    margin-bottom: var(--s-8);
+  }
+
+  .lost__nav {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+    border-top: var(--hair);
+    max-width: 22rem;
+  }
+
+  .lost__nav li {
+    border-bottom: var(--hair);
+  }
+
+  .lost__nav a {
+    display: block;
+    padding: var(--s-2) var(--s-1);
+    text-decoration: none;
+    font-size: var(--t-sm);
+    text-transform: uppercase;
+    letter-spacing: var(--track-wide);
+  }
+
+  .lost__nav a:hover {
+    background: var(--ink);
+    color: var(--paper);
+    padding-left: var(--s-3);
+  }
+
+  .lost__nav .num {
+    opacity: 0.45;
+    margin-right: 0.6em;
+  }
+</style>

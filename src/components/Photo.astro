@@ -1,0 +1,54 @@
+---
+/**
+ * Photo — a photograph, in black and white.
+ *
+ * Desaturated with a CSS filter and nothing else: no dithering, no
+ * halftone, no tone curve. The browser does the conversion on the
+ * GPU, so there is no canvas work and no JavaScript involved.
+ */
+interface Props {
+  src: string;
+  alt: string;
+  /** e.g. "3/2". Locks the box and crops, so the layout cannot shift. */
+  ratio?: string;
+  loading?: "lazy" | "eager";
+  width?: number;
+  height?: number;
+  class?: string;
+}
+
+const {
+  src,
+  alt,
+  ratio,
+  loading = "lazy",
+  width,
+  height,
+  class: className = "",
+} = Astro.props;
+---
+
+<img
+  class:list={["photo", ratio && "photo--fixed", className]}
+  style={ratio ? `--ratio:${ratio}` : undefined}
+  src={src}
+  alt={alt}
+  loading={loading}
+  decoding="async"
+  width={width}
+  height={height}
+/>
+
+<style>
+  .photo {
+    display: block;
+    width: 100%;
+    height: auto;
+    filter: grayscale(1);
+  }
+
+  .photo--fixed {
+    aspect-ratio: var(--ratio, 3 / 2);
+    object-fit: cover;
+  }
+</style>

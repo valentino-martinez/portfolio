@@ -1,0 +1,46 @@
+---
+/**
+ * Grain — paper texture for a page that has no paper.
+ *
+ * One fixed tile of fractal noise, pushed through a contrast curve
+ * so it speckles rather than smears, at an opacity low enough that
+ * you read it as tooth in the stock rather than as an image. It
+ * replaced a full-screen dithered interference field, which was
+ * legible as a *pattern* and competed with the photographs.
+ *
+ * It does not move: animated grain is a flicker in your peripheral
+ * vision the whole time you are trying to read, and the texture
+ * looks the same when it holds still.
+ *
+ * One composited layer that never repaints, so it costs nothing.
+ */
+interface Props {
+  /** 0–1. Past ~0.2 it starts eating the small type. */
+  opacity?: number;
+}
+const { opacity = 0.11 } = Astro.props;
+---
+
+<div class="grain" aria-hidden="true" style={`--grain-opacity:${opacity}`}></div>
+
+<style>
+  .grain {
+    position: fixed;
+    inset: 0;
+    pointer-events: none;
+    z-index: var(--z-grain);
+    opacity: var(--grain-opacity);
+    /* feComponentTransfer pulls the midtones apart so the noise
+       reads as discrete specks, which is what paper looks like
+       up close, instead of a soft grey fog. */
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='180' height='180'%3E%3Cfilter id='g'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3CfeColorMatrix type='saturate' values='0'/%3E%3CfeComponentTransfer%3E%3CfeFuncA type='gamma' exponent='2.2'/%3E%3C/feComponentTransfer%3E%3C/filter%3E%3Crect width='180' height='180' filter='url(%23g)'/%3E%3C/svg%3E");
+    background-size: 180px 180px;
+    background-repeat: repeat;
+  }
+
+  @media print {
+    .grain {
+      display: none;
+    }
+  }
+</style>

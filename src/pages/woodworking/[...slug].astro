@@ -1,0 +1,55 @@
+---
+import { getCollection, render, type CollectionEntry } from "astro:content";
+import Entry from "../../layouts/Entry.astro";
+import { byDateDesc, publicOnly } from "../../lib/format";
+
+export async function getStaticPaths() {
+  const pieces = publicOnly(await getCollection("woodworking")).sort(byDateDesc);
+  return pieces.map((piece, i) => ({
+    params: { slug: piece.id },
+    props: {
+      piece,
+      prev: pieces[i - 1] ?? null,
+      next: pieces[i + 1] ?? null,
+    },
+  }));
+}
+
+type Props = {
+  piece: CollectionEntry<"woodworking">;
+  prev: CollectionEntry<"woodworking"> | null;
+  next: CollectionEntry<"woodworking"> | null;
+};
+
+const { piece, prev, next } = Astro.props as Props;
+const { Content } = await render(piece);
+const d = piece.data;
+
+const specs = [
+  d.species.length ? { label: "Species", value: d.species.join(", ") } : null,
+  d.joinery.length ? { label: "Joinery", value: d.joinery.join(", ") } : null,
+  d.finish ? { label: "Finish", value: d.finish } : null,
+  d.dimensions ? { label: "Size", value: d.dimensions } : null,
+  { label: "Status", value: d.status.replace("-", " ") },
+].filter((row): row is { label: string; value: string } => row !== null);
+---
+
+<Entry
+  title={d.title}
+  summary={d.summary}
+  section="Woodworking — 05"
+  date={d.date}
+  updated={d.updated}
+  tags={d.tags}
+  specs={specs}
+  backHref="/woodworking/"
+  backLabel="All woodworking"
+  prev={prev
+    ? { href: `/woodworking/${prev.id}/`, title: prev.data.title }
+    : null}
+  next={next
+    ? { href: `/woodworking/${next.id}/`, title: next.data.title }
+    : null}
+>
+  <Content />
+</Entry>

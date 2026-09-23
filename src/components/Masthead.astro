@@ -1,0 +1,227 @@
+---
+/**
+ * Masthead — sticky running head. Wordmark, numbered nav, and the
+ * instrument cluster (clock, scroll position, invert switch).
+ */
+import { nav, site } from "../site";
+
+const path = Astro.url.pathname.replace(/\/+$/, "") || "/";
+const isCurrent = (href: string) => {
+  const clean = href.replace(/\/+$/, "") || "/";
+  if (clean === "/") return path === "/";
+  return path === clean || path.startsWith(clean + "/");
+};
+---
+
+<header class="mast">
+  <div class="mast__bar page">
+    <a class="mast__mark" href="/" aria-label={`${site.name} — home`}>
+      <span class="mast__wordmark title">{site.mark}</span>
+    </a>
+
+    <nav class="mast__nav" aria-label="Primary">
+      <ul>
+        {
+          nav.map((item) => (
+            <li>
+              <a
+                href={item.href}
+                class="mast__link"
+                aria-current={isCurrent(item.href) ? "page" : undefined}
+              >
+                <span class="mast__idx num" aria-hidden="true">
+                  {item.index}
+                </span>
+                <span class="mast__label" data-scramble>
+                  {item.label}
+                </span>
+              </a>
+            </li>
+          ))
+        }
+      </ul>
+    </nav>
+
+    <div class="mast__instruments label">
+      <span class="mast__clock num" data-clock aria-hidden="true">--:--:--</span>
+      <span class="mast__scroll num" data-scroll-readout aria-hidden="true">000%</span>
+      <button
+        type="button"
+        class="mast__invert"
+        data-invert-toggle
+        aria-pressed="false"
+      >
+        <span class="mast__swatch" aria-hidden="true"></span>
+        <span data-invert-label>NEGATIVE</span>
+      </button>
+    </div>
+  </div>
+</header>
+
+<style>
+  .mast {
+    position: sticky;
+    top: 0;
+    z-index: var(--z-nav);
+    background: var(--paper);
+    border-bottom: var(--hair);
+  }
+
+  .mast__bar {
+    display: flex;
+    align-items: center;
+    gap: var(--s-6);
+    min-height: 44px;
+  }
+
+  /* --- wordmark ------------------------------------------------ */
+  .mast__mark {
+    flex: none;
+    display: flex;
+    align-items: center;
+    text-decoration: none;
+    padding-right: var(--s-4);
+    border-right: var(--hair);
+    align-self: stretch;
+  }
+
+  .mast__wordmark {
+    font-size: 24px;
+  }
+
+  /* --- nav ----------------------------------------------------- */
+  .mast__nav {
+    flex: 1 1 auto;
+    min-width: 0;
+    overflow-x: auto;
+    scrollbar-width: none;
+    -ms-overflow-style: none;
+  }
+  .mast__nav::-webkit-scrollbar {
+    display: none;
+  }
+
+  .mast__nav ul {
+    display: flex;
+    list-style: none;
+    padding: 0;
+    margin: 0;
+    gap: 0;
+  }
+
+  .mast__link {
+    display: inline-flex;
+    align-items: baseline;
+    gap: 0.4em;
+    padding: var(--s-3) var(--s-3);
+    text-decoration: none;
+    font-size: var(--t-xs);
+    text-transform: uppercase;
+    letter-spacing: var(--track-wide);
+    white-space: nowrap;
+    transition: background-color var(--dur-fast) var(--ease-mech),
+      color var(--dur-fast) var(--ease-mech);
+  }
+
+  .mast__idx {
+    opacity: 0.45;
+    font-size: 0.85em;
+  }
+
+  .mast__link:hover,
+  .mast__link:focus-visible {
+    background: var(--ink);
+    color: var(--paper);
+  }
+  .mast__link:hover .mast__idx {
+    opacity: 0.7;
+  }
+
+  .mast__link[aria-current="page"] {
+    background: var(--ink);
+    color: var(--paper);
+  }
+  .mast__link[aria-current="page"] .mast__idx {
+    opacity: 0.75;
+  }
+
+  /* --- instruments --------------------------------------------- */
+  .mast__instruments {
+    flex: none;
+    display: flex;
+    align-items: center;
+    gap: var(--s-3);
+    padding-left: var(--s-4);
+    border-left: var(--hair);
+    align-self: stretch;
+  }
+
+  .mast__clock,
+  .mast__scroll {
+    opacity: 0.6;
+    font-size: var(--t-xs);
+  }
+
+  .mast__invert {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5em;
+    background: none;
+    border: var(--hair);
+    padding: 3px var(--s-2);
+    cursor: pointer;
+    font-size: var(--t-xs);
+    text-transform: uppercase;
+    letter-spacing: var(--track-wide);
+    transition: background-color var(--dur-fast) var(--ease-mech),
+      color var(--dur-fast) var(--ease-mech);
+  }
+  .mast__invert:hover {
+    background: var(--ink);
+    color: var(--paper);
+  }
+
+  /* Half-filled square: the universal "invert" glyph. */
+  .mast__swatch {
+    width: 9px;
+    height: 9px;
+    border: 1px solid currentColor;
+    background: linear-gradient(
+      135deg,
+      currentColor 0 50%,
+      transparent 50% 100%
+    );
+  }
+
+  @media (max-width: 62rem) {
+    .mast__clock,
+    .mast__scroll {
+      display: none;
+    }
+  }
+
+  @media (max-width: 40rem) {
+    .mast__bar {
+      flex-wrap: wrap;
+      gap: 0;
+      padding-block: var(--s-2);
+    }
+    .mast__mark {
+      border-right: 0;
+      flex: 1 1 auto;
+    }
+    .mast__instruments {
+      border-left: 0;
+      padding-left: 0;
+    }
+    .mast__nav {
+      flex: 1 0 100%;
+      order: 3;
+      border-top: var(--hair);
+      margin-top: var(--s-2);
+    }
+    .mast__link {
+      padding-inline: var(--s-2);
+    }
+  }
+</style>

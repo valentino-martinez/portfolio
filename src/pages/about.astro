@@ -1,0 +1,294 @@
+---
+import Base from "../layouts/Base.astro";
+import SectionHead from "../components/SectionHead.astro";
+import Plate from "../components/Plate.astro";
+import ToneScale from "../components/ToneScale.astro";
+import { links, site } from "../site";
+
+/* Edit these three lists and the page rewrites itself. */
+const now = [
+  "Designing and building things at Stanford",
+  "Throwing pots at cone 6, badly but improving",
+  "Building a set of drawers that has defeated me twice",
+  "Reading about the first decade of digital typography",
+];
+
+const timeline: { year: string; what: string }[] = [
+  { year: "2026", what: "Rebuilt this site as a one-bit publishing system" },
+  { year: "2025", what: "Started keeping a proper studio log" },
+  { year: "2024", what: "First kiln load that came out entirely usable" },
+  { year: "2023", what: "Built the bench everything else gets built on" },
+];
+
+const tools = [
+  "Figma",
+  "TypeScript",
+  "Astro",
+  "Canvas / WebGL",
+  "A Shimpo wheel",
+  "A No. 4 smoothing plane",
+  "Too many clamps",
+];
+---
+
+<Base
+  title="About"
+  section="About — 01"
+  description={`About ${site.name} — ${site.role} in ${site.location}.`}
+>
+  <SectionHead
+    index="01"
+    title="About"
+    kicker="Who"
+    lede="Designer. Sometime potter, sometime woodworker, full-time person who cannot leave a material alone once he has started poking at it."
+  />
+
+  <div class="page about">
+    <div class="about__portrait" data-reveal>
+      <Plate no="1.1" caption={`${site.name}`} meta="PORTRAIT">
+        <div class="plate-empty plate-empty--portrait">
+          <span class="label num">PORTRAIT</span>
+        </div>
+      </Plate>
+
+      <dl class="vitals">
+        <div class="vitals__row">
+          <dt class="label">Based</dt>
+          <dd>{site.location}</dd>
+        </div>
+        <div class="vitals__row">
+          <dt class="label">Doing</dt>
+          <dd>{site.role}</dd>
+        </div>
+        <div class="vitals__row">
+          <dt class="label">Email</dt>
+          <dd><a href={`mailto:${site.email}`} data-scramble>{site.email}</a></dd>
+        </div>
+        {
+          links.slice(1).map((link) => (
+            <div class="vitals__row">
+              <dt class="label">{link.label}</dt>
+              <dd>
+                <a href={link.href} rel="me noopener" data-scramble>
+                  Visit ↗
+                </a>
+              </dd>
+            </div>
+          ))
+        }
+      </dl>
+    </div>
+
+    <div class="about__text">
+      <div class="prose" data-reveal>
+        <p class="about__lede">
+          I am a designer who keeps ending up with materials in my hands.
+        </p>
+
+        <p>
+          Most of my work lives on screens, but the things that taught me
+          the most about design were physical: a pot that collapses the
+          instant the wall goes too thin, a dovetail that either fits or
+          does not. Both of them give you an answer immediately and
+          neither of them cares how good your reasoning was.
+        </p>
+
+        <h2>What I actually do</h2>
+
+        <p>
+          I design interfaces and the systems underneath them — type
+          scales, colour systems, component libraries, the unglamorous
+          infrastructure that makes a hundred screens feel like one
+          product. Then I build them, because a specification that has
+          never been compiled is a wish.
+        </p>
+
+        <h2>Why this site looks like this</h2>
+
+        <p>
+          In 1986 April Greiman took the entirety of <em>Design
+          Quarterly</em> issue 133 and turned it into a single
+          two-foot-by-six-foot poster, built out of a life-sized digitised
+          self-portrait, video captures, and bitmapped type — made on a
+          Macintosh that could not display a single shade of grey.
+        </p>
+
+        <p>
+          It should have looked primitive. Instead it looked like the
+          future, because the constraint forced every decision to be
+          deliberate. This site is my attempt to work inside that
+          constraint on purpose: two colours, no gradients, every tone
+          you think you see assembled out of dots by your own visual
+          system.
+        </p>
+
+        <h2>Elsewhere</h2>
+
+        <p>
+          The fastest way to reach me is
+          <a href={`mailto:${site.email}`}>email</a>. I answer most
+          things, eventually.
+        </p>
+      </div>
+
+      <section class="panel" data-reveal>
+        <h2 class="label panel__h">Now</h2>
+        <ul class="list">
+          {now.map((item) => <li>{item}</li>)}
+        </ul>
+      </section>
+
+      <section class="panel" data-reveal>
+        <h2 class="label panel__h">Previously</h2>
+        <ol class="timeline">
+          {
+            timeline.map((row) => (
+              <li class="timeline__row">
+                <span class="timeline__year num">{row.year}</span>
+                <span class="timeline__what">{row.what}</span>
+              </li>
+            ))
+          }
+        </ol>
+      </section>
+
+      <section class="panel" data-reveal>
+        <h2 class="label panel__h">Tools</h2>
+        <p class="tools">
+          {tools.map((t) => <span class="tools__item">{t}</span>)}
+        </p>
+      </section>
+
+      <section class="panel" data-reveal>
+        <h2 class="label panel__h">Calibration</h2>
+        <ToneScale steps={16} pitch={5} height={36} />
+        <p class="panel__note label">
+          If the left square is pure white and the right is pure black,
+          your screen is showing this page correctly.
+        </p>
+      </section>
+    </div>
+  </div>
+</Base>
+
+<style>
+  .about {
+    display: grid;
+    gap: var(--s-12);
+    padding-bottom: var(--s-16);
+  }
+
+  @media (min-width: 62rem) {
+    .about {
+      grid-template-columns: 20rem minmax(0, 1fr);
+      gap: var(--s-16);
+      align-items: start;
+    }
+    .about__portrait {
+      position: sticky;
+      top: 5rem;
+    }
+  }
+
+  .about__lede {
+    font-size: var(--t-md);
+    line-height: var(--lead-snug);
+    font-weight: 700;
+  }
+
+  /* ---------- vitals ----------------------------------------- */
+  .vitals {
+    margin: var(--s-6) 0 0;
+    border-top: var(--hair);
+  }
+
+  .vitals__row {
+    display: grid;
+    grid-template-columns: 5.5rem 1fr;
+    gap: var(--s-3);
+    padding-block: var(--s-2);
+    border-bottom: var(--hair);
+    font-size: var(--t-sm);
+  }
+
+  .vitals__row dt {
+    opacity: 0.6;
+  }
+  .vitals__row dd {
+    margin: 0;
+    overflow-wrap: anywhere;
+  }
+  .vitals__row a {
+    text-decoration: none;
+    border-bottom: var(--hair);
+  }
+  .vitals__row a:hover {
+    background: var(--ink);
+    color: var(--paper);
+  }
+
+  /* ---------- panels ----------------------------------------- */
+  .panel {
+    margin-top: var(--s-12);
+  }
+
+  .panel__h {
+    padding-bottom: var(--s-1);
+    border-bottom: var(--hair);
+    margin-bottom: var(--s-4);
+  }
+
+  .panel__note {
+    margin-top: var(--s-3);
+    opacity: 0.6;
+  }
+
+  .list {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+    font-size: var(--t-sm);
+  }
+  .list li {
+    padding-block: var(--s-2);
+    border-bottom: var(--hair);
+  }
+  .list li::before {
+    content: "▪ ";
+    opacity: 0.5;
+  }
+
+  .timeline {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+  }
+  .timeline__row {
+    display: grid;
+    grid-template-columns: 4rem 1fr;
+    gap: var(--s-3);
+    padding-block: var(--s-2);
+    border-bottom: var(--hair);
+    font-size: var(--t-sm);
+  }
+  .timeline__year {
+    opacity: 0.55;
+  }
+
+  .tools {
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--s-2);
+  }
+  .tools__item {
+    border: var(--hair);
+    padding: 2px var(--s-2);
+    font-size: var(--t-xs);
+    text-transform: uppercase;
+    letter-spacing: var(--track-wide);
+  }
+  .tools__item:hover {
+    background: var(--ink);
+    color: var(--paper);
+  }
+</style>

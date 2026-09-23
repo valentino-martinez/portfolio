@@ -1,0 +1,158 @@
+---
+/**
+ * Dither — a picture, reduced to ink and paper.
+ *
+ * The <img> is both the pixel source and the no-JS fallback: if the
+ * custom element never upgrades, you simply get the photograph.
+ * Once it does, the <img> is hidden but stays laid out so lazy
+ * loading still fires.
+ */
+import type { DitherAlgorithm } from "../lib/dither";
+
+interface Props {
+  src: string;
+  alt: string;
+  algorithm?: DitherAlgorithm;
+  /** Device pixels per dither cell. 1 = fine, 4 = very chunky. */
+  scale?: number;
+  levels?: number;
+  brightness?: number;
+  contrast?: number;
+  gamma?: number;
+  threshold?: number;
+  invert?: boolean;
+  /** Paper becomes transparent — good for layering over the grid. */
+  transparent?: boolean;
+  /** 0–1. Fades toward paper away from `focus`, lifting a subject out
+   *  of a dark background instead of letting it flood to ink. */
+  vignette?: number;
+  /** Centre of that fade, 0–1 image coordinates. */
+  focusX?: number;
+  focusY?: number;
+  focusRadius?: number;
+  focusFeather?: number;
+  /** Fade up from white on first scroll-in. */
+  develop?: boolean;
+  mode?: "dither" | "halftone";
+  /** Halftone only. */
+  cell?: number;
+  angle?: number;
+  shape?: "circle" | "square" | "line";
+  /** e.g. "4/3". Locks the box and crops, preventing layout shift.
+   *  Exposed as `--ratio` so media queries can override it. */
+  ratio?: string;
+  loading?: "lazy" | "eager";
+  width?: number;
+  height?: number;
+  class?: string;
+}
+
+const {
+  src,
+  alt,
+  algorithm = "atkinson",
+  scale = 2,
+  levels,
+  brightness,
+  contrast,
+  gamma,
+  threshold,
+  invert = false,
+  transparent = false,
+  vignette,
+  focusX,
+  focusY,
+  focusRadius,
+  focusFeather,
+  develop = true,
+  mode,
+  cell,
+  angle,
+  shape,
+  ratio,
+  loading = "lazy",
+  width,
+  height,
+  class: className = "",
+} = Astro.props;
+---
+
+<x-dither
+  class:list={["dither-host", ratio && "dither-host--fixed", className]}
+  style={ratio ? `--ratio:${ratio}` : undefined}
+  algorithm={algorithm}
+  scale={scale}
+  levels={levels}
+  brightness={brightness}
+  contrast={contrast}
+  gamma={gamma}
+  threshold={threshold}
+  vignette={vignette}
+  focus-x={focusX}
+  focus-y={focusY}
+  focus-radius={focusRadius}
+  focus-feather={focusFeather}
+  mode={mode}
+  cell={cell}
+  angle={angle}
+  shape={shape}
+  invert={invert ? "" : undefined}
+  transparent={transparent ? "" : undefined}
+  develop={develop ? "" : undefined}
+>
+  <img
+    src={src}
+    alt={alt}
+    loading={loading}
+    decoding="async"
+    width={width}
+    height={height}
+  />
+</x-dither>
+
+<style is:global>
+  .dither-host {
+    display: block;
+    position: relative;
+    line-height: 0;
+  }
+
+  .dither-host img {
+    display: block;
+    width: 100%;
+    height: auto;
+  }
+
+  /* Once the canvas exists the source image steps out of the way but
+     keeps its box, so `loading="lazy"` still resolves. */
+  .dither-host[data-active] img {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    visibility: hidden;
+  }
+
+  .dither-host canvas.dither {
+    display: block;
+    width: 100%;
+    height: auto;
+    /* The whole point: never let the browser smooth our pixels. */
+    image-rendering: pixelated;
+    image-rendering: crisp-edges;
+  }
+
+  .dither-host--fixed {
+    overflow: hidden;
+    aspect-ratio: var(--ratio, 4 / 3);
+  }
+
+  .dither-host--fixed canvas.dither {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+  }
+</style>

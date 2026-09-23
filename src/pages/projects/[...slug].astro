@@ -1,0 +1,51 @@
+---
+import { getCollection, render, type CollectionEntry } from "astro:content";
+import Entry from "../../layouts/Entry.astro";
+import { byDateDesc, publicOnly } from "../../lib/format";
+
+export async function getStaticPaths() {
+  const projects = publicOnly(await getCollection("projects")).sort(byDateDesc);
+  return projects.map((project, i) => ({
+    params: { slug: project.id },
+    props: {
+      project,
+      prev: projects[i - 1] ?? null,
+      next: projects[i + 1] ?? null,
+    },
+  }));
+}
+
+type Props = {
+  project: CollectionEntry<"projects">;
+  prev: CollectionEntry<"projects"> | null;
+  next: CollectionEntry<"projects"> | null;
+};
+
+const { project, prev, next } = Astro.props as Props;
+const { Content } = await render(project);
+const d = project.data;
+
+const specs = [
+  { label: "Year", value: String(d.year) },
+  d.role ? { label: "Role", value: d.role } : null,
+  d.context ? { label: "Context", value: d.context } : null,
+  d.tools.length ? { label: "Tools", value: d.tools.join(", ") } : null,
+].filter((row): row is { label: string; value: string } => row !== null);
+---
+
+<Entry
+  title={d.title}
+  summary={d.summary}
+  section="Projects — 02"
+  date={d.date}
+  updated={d.updated}
+  tags={d.tags}
+  specs={specs}
+  links={d.links}
+  backHref="/projects/"
+  backLabel="All projects"
+  prev={prev ? { href: `/projects/${prev.id}/`, title: prev.data.title } : null}
+  next={next ? { href: `/projects/${next.id}/`, title: next.data.title } : null}
+>
+  <Content />
+</Entry>

@@ -1,0 +1,292 @@
+---
+/**
+ * Entry — the detail page for any single piece of content: a post,
+ * a project, a pot, a box. One template, because they are all the
+ * same document with different fields in the spec table.
+ */
+import Base from "./Base.astro";
+import Ruler from "../components/Ruler.astro";
+import { stamp } from "../lib/format";
+
+export interface SpecRow {
+  label: string;
+  value: string;
+}
+
+interface Props {
+  title: string;
+  summary: string;
+  /** Running head, e.g. "Blog — 03". */
+  section: string;
+  date: Date;
+  updated?: Date;
+  tags?: string[];
+  /** The left-hand metadata table. */
+  specs?: SpecRow[];
+  /** Outbound links printed as buttons. */
+  links?: { label: string; href: string }[];
+  backHref: string;
+  backLabel: string;
+  prev?: { href: string; title: string } | null;
+  next?: { href: string; title: string } | null;
+}
+
+const {
+  title,
+  summary,
+  section,
+  date,
+  updated,
+  tags = [],
+  specs = [],
+  links = [],
+  backHref,
+  backLabel,
+  prev,
+  next,
+} = Astro.props;
+---
+
+<Base title={title} description={summary} section={section}>
+  <article class="entry">
+    <header class="entry__head page">
+      <a class="entry__back label" href={backHref} data-scramble>
+        ← {backLabel}
+      </a>
+
+      <h1 class="entry__title title title--lg" data-reveal>{title}</h1>
+
+      <p class="entry__summary" data-reveal>{summary}</p>
+
+      <Ruler step={6} major={6} height={10} />
+    </header>
+
+    <div class="page entry__body">
+      <aside class="entry__specs" data-reveal>
+        <dl class="specs">
+          <div class="specs__row">
+            <dt class="label">Date</dt>
+            <dd class="num">
+              <time datetime={date.toISOString()}>{stamp(date)}</time>
+            </dd>
+          </div>
+
+          {
+            updated && (
+              <div class="specs__row">
+                <dt class="label">Updated</dt>
+                <dd class="num">
+                  <time datetime={updated.toISOString()}>{stamp(updated)}</time>
+                </dd>
+              </div>
+            )
+          }
+
+          {
+            specs.map((spec) => (
+              <div class="specs__row">
+                <dt class="label">{spec.label}</dt>
+                <dd>{spec.value}</dd>
+              </div>
+            ))
+          }
+
+          {
+            tags.length > 0 && (
+              <div class="specs__row">
+                <dt class="label">Tags</dt>
+                <dd class="specs__tags">
+                  {tags.map((t) => (
+                    <span class="specs__tag label">{t}</span>
+                  ))}
+                </dd>
+              </div>
+            )
+          }
+        </dl>
+
+        {
+          links.length > 0 && (
+            <ul class="entry__links">
+              {links.map((link) => (
+                <li>
+                  <a href={link.href} rel="noopener noreferrer" target="_blank" data-scramble>
+                    {link.label} ↗
+                  </a>
+                </li>
+              ))}
+            </ul>
+          )
+        }
+      </aside>
+
+      <div class="entry__main">
+        <div class="prose entry__prose">
+          <slot />
+        </div>
+      </div>
+    </div>
+
+    <nav class="page entry__nav" aria-label="More entries">
+      {
+        prev ? (
+          <a class="entry__navLink entry__navLink--prev" href={prev.href}>
+            <span class="label">Previous</span>
+            <span class="entry__navTitle" data-scramble>{prev.title}</span>
+          </a>
+        ) : (
+          <span />
+        )
+      }
+      {
+        next ? (
+          <a class="entry__navLink entry__navLink--next" href={next.href}>
+            <span class="label">Next</span>
+            <span class="entry__navTitle" data-scramble>{next.title}</span>
+          </a>
+        ) : (
+          <span />
+        )
+      }
+    </nav>
+  </article>
+</Base>
+
+<style>
+  .entry__head {
+    padding-top: var(--s-8);
+    padding-bottom: var(--s-6);
+  }
+
+  .entry__back {
+    display: inline-block;
+    margin-bottom: var(--s-6);
+    text-decoration: none;
+    border-bottom: var(--hair);
+  }
+  .entry__back:hover {
+    background: var(--ink);
+    color: var(--paper);
+  }
+
+  .entry__title {
+    margin: 0 0 var(--s-6);
+  }
+
+  .entry__summary {
+    font-size: var(--t-md);
+    line-height: var(--lead-snug);
+    max-width: var(--measure);
+    margin-bottom: var(--s-6);
+    text-wrap: balance;
+  }
+
+  .entry__body {
+    display: grid;
+    gap: var(--s-8);
+    padding-top: var(--s-8);
+  }
+
+  @media (min-width: 60rem) {
+    .entry__body {
+      grid-template-columns: 15rem minmax(0, 1fr);
+      gap: var(--s-16);
+      align-items: start;
+    }
+    .entry__specs {
+      position: sticky;
+      top: 5rem;
+    }
+  }
+
+  /* ---------- spec table ---------------------------------- */
+  .specs {
+    border-top: var(--hair);
+    margin: 0;
+  }
+
+  .specs__row {
+    display: grid;
+    grid-template-columns: 6rem 1fr;
+    gap: var(--s-3);
+    padding-block: var(--s-2);
+    border-bottom: var(--hair);
+    font-size: var(--t-sm);
+  }
+
+  .specs__row dt {
+    opacity: 0.6;
+  }
+
+  .specs__row dd {
+    margin: 0;
+  }
+
+  .specs__tags {
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--s-2);
+  }
+
+  .specs__tag::before {
+    content: "▪ ";
+  }
+
+  .entry__links {
+    list-style: none;
+    padding: 0;
+    margin-top: var(--s-4);
+    display: grid;
+    gap: var(--s-2);
+    font-size: var(--t-sm);
+  }
+
+  .entry__links a {
+    text-decoration: none;
+    border: var(--hair);
+    padding: var(--s-1) var(--s-3);
+    display: inline-block;
+  }
+  .entry__links a:hover {
+    background: var(--ink);
+    color: var(--paper);
+  }
+
+  /* ---------- body ---------------------------------------- */
+  .entry__prose {
+    max-width: var(--measure);
+  }
+
+  /* ---------- prev / next --------------------------------- */
+  .entry__nav {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: var(--s-4);
+    margin-top: var(--s-16);
+    border-top: var(--hair);
+    padding-top: var(--s-4);
+  }
+
+  .entry__navLink {
+    display: grid;
+    gap: var(--s-1);
+    text-decoration: none;
+    padding: var(--s-3);
+    transition: background-color var(--dur-fast) var(--ease-mech),
+      color var(--dur-fast) var(--ease-mech);
+  }
+  .entry__navLink:hover {
+    background: var(--ink);
+    color: var(--paper);
+  }
+
+  .entry__navLink--next {
+    text-align: right;
+  }
+
+  .entry__navTitle {
+    font-size: var(--t-sm);
+    text-transform: uppercase;
+    letter-spacing: 0.02em;
+  }
+</style>

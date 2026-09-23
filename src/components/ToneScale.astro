@@ -1,0 +1,97 @@
+---
+/**
+ * ToneScale — a step wedge, the strip of increasing densities a
+ * printer pulls to check a press. Here each step is a real halftone
+ * dot screen built from a radial gradient, so the greys are made of
+ * black and white the same way everything else on the page is.
+ */
+interface Props {
+  steps?: number;
+  /** Dot pitch in px. */
+  pitch?: number;
+  height?: number;
+  labelled?: boolean;
+  class?: string;
+}
+const {
+  steps = 12,
+  pitch = 6,
+  height = 44,
+  labelled = true,
+  class: className = "",
+} = Astro.props;
+
+const cells = Array.from({ length: steps }, (_, i) => {
+  const density = i / (steps - 1);
+  // Dot radius by area, so the wedge reads linearly.
+  const radius = (pitch / 2) * Math.sqrt(density) * 1.42;
+  return { density, radius, pct: Math.round(density * 100) };
+});
+---
+
+<div class:list={["wedge", className]} aria-hidden="true">
+  <div class="wedge__row" style={`--pitch:${pitch}px; --h:${height}px`}>
+    {
+      cells.map((cell) => (
+        <div
+          class="wedge__cell"
+          style={`--r:${cell.radius.toFixed(2)}px`}
+          data-solid={cell.density >= 0.999 ? "" : undefined}
+        />
+      ))
+    }
+  </div>
+  {
+    labelled && (
+      <div class="wedge__labels label num">
+        {cells.map((cell) => (
+          <span>{cell.pct}</span>
+        ))}
+      </div>
+    )
+  }
+</div>
+
+<style>
+  .wedge {
+    width: 100%;
+  }
+
+  .wedge__row {
+    display: flex;
+    height: var(--h);
+    border: var(--hair);
+  }
+
+  .wedge__cell {
+    flex: 1 1 0;
+    border-right: var(--hair);
+    background-image: radial-gradient(
+      circle at 50% 50%,
+      var(--ink) var(--r),
+      transparent calc(var(--r) + 0.5px)
+    );
+    background-size: var(--pitch) var(--pitch);
+  }
+
+  /* The last step is solid ink; a 100% dot screen has no gaps. */
+  .wedge__cell[data-solid] {
+    background: var(--ink);
+  }
+
+  .wedge__cell:last-child {
+    border-right: 0;
+  }
+
+  .wedge__labels {
+    display: flex;
+    margin-top: 3px;
+    opacity: 0.6;
+  }
+
+  .wedge__labels span {
+    flex: 1 1 0;
+    text-align: center;
+    font-size: 9px;
+  }
+</style>
