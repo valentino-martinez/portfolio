@@ -17,6 +17,7 @@ import { initScramble } from "./scramble";
 import { initCursor } from "./cursor";
 import { initTheme } from "./theme";
 import { initRails } from "./rail";
+import { initCollide } from "./collide";
 
 /* ------------------------------------------------------------
    Live readouts — the terminal-status-line furniture.
@@ -69,6 +70,7 @@ function boot(): void {
   initCursor();
   initReadouts();
   initRails();
+  initCollide();
 }
 
 if (document.readyState === "loading") {

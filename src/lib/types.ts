@@ -27,7 +27,10 @@ export type MarkType =
   | "target" // registration circle and cross
   | "stack" // stepped blocks, a staircase of squares
   | "dots" // square field thinning out
-  | "ring"; // one ellipse, off-axis
+  | "ring" // one ellipse, off-axis
+  | "sunset" // filled panel, a disc half-sunk behind a horizon
+  | "wave" // horizontal striations, like video static in a block
+  | "arc"; // a long shallow curve, the pendulum line
 
 /** One of the big shapes loose in the page. See Field.astro. */
 export interface FieldShape {

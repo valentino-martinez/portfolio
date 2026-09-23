@@ -46,12 +46,25 @@ const {
 } = Astro.props;
 
 const N = Math.max(6, grid);
-/* Square cells with a gutter: these read as drawn marks. Solid,
-   gutterless mass is the display face's job (src/lib/blockfont.ts),
-   not these. */
+
+/* Most marks are square line-drawings on a gutter grid. The panel
+   shapes — sunset, wave — are wider than tall and solid, because
+   they are blocks of ink rather than drawings. */
+const PANEL: Partial<Record<MarkType, { cols: number; rows: number }>> = {
+  sunset: { cols: 18, rows: 12 },
+  wave: { cols: 20, rows: 11 },
+  arc: { cols: 22, rows: 9 },
+};
+const shape = PANEL[type];
+const COLS = shape ? shape.cols : N;
+const ROWS = shape ? shape.rows : N;
+
 const CELL = 10;
-const GAP = 1.6;
-const SPAN = N * CELL;
+/* Solid panels have no gutter; drawn marks keep one so they read as
+   strokes rather than mass. */
+const GAP = type === "sunset" || type === "wave" ? 0 : 1.6;
+const VB_W = COLS * CELL;
+const VB_H = ROWS * CELL;
 const MID = (N - 1) / 2;
 
 /* Deterministic PRNG. Math.random() would redraw every mark on every
@@ -73,8 +86,9 @@ const on = new Set<number>();
 const plot = (x: number, y: number) => {
   const gx = Math.round(x);
   const gy = Math.round(y);
-  if (gx >= 0 && gx < N && gy >= 0 && gy < N) on.add(gy * N + gx);
+  if (gx >= 0 && gx < COLS && gy >= 0 && gy < ROWS) on.add(gy * COLS + gx);
 };
+const clear = (x: number, y: number) => on.delete(y * COLS + x);
 
 function walkEllipse(rx: number, ry: number, rotDeg: number) {
   const rot = (rotDeg * Math.PI) / 180;
@@ -108,6 +122,56 @@ function fillRect(x0: number, y0: number, w: number, h: number) {
 const R = MID - 0.5;
 
 switch (type) {
+  case "sunset": {
+    // A solid panel with a disc lifted out of it, then a horizon
+    // band laid back over the disc's lower half so it reads as
+    // half-sunk — the framed sunset from the poster.
+    fillRect(0, 0, COLS, ROWS);
+    const cx = COLS * 0.5;
+    const cy = ROWS * 0.54;
+    const r = ROWS * 0.34;
+    for (let y = 0; y < ROWS; y++) {
+      for (let x = 0; x < COLS; x++) {
+        // Cells are square, so no aspect correction is needed.
+        if (Math.hypot(x + 0.5 - cx, y + 0.5 - cy) < r) clear(x, y);
+      }
+    }
+    const horizon = Math.round(ROWS * 0.62);
+    fillRect(0, horizon, COLS, ROWS - horizon);
+    break;
+  }
+
+  case "wave": {
+    // Horizontal runs of ink at varying length and offset: the
+    // banded video static that fills a block in the original.
+    for (let y = 0; y < ROWS; y++) {
+      let x = 0;
+      while (x < COLS) {
+        const run = 1 + Math.floor(rand() * 4);
+        const gapRun = 1 + Math.floor(rand() * 3);
+        // Denser at the top, thinning downward.
+        if (rand() < 1 - y / (ROWS * 1.4)) {
+          for (let i = 0; i < run && x + i < COLS; i++) plot(x + i, y);
+        }
+        x += run + gapRun;
+      }
+    }
+    break;
+  }
+
+  case "arc": {
+    // The long shallow curve the figure lies along. Bottom half of
+    // a very wide ellipse, one cell thick.
+    const rx = COLS / 2 - 0.5;
+    const ry = ROWS - 1.5;
+    const steps = COLS * 12;
+    for (let i = 0; i <= steps; i++) {
+      const th = Math.PI * (i / steps);
+      plot(COLS / 2 - 0.5 + Math.cos(th) * rx, 0.5 + Math.sin(th) * ry);
+    }
+    break;
+  }
+
   case "orbit": {
     for (let i = 0; i < 4; i++) {
       const rx = R - i * 1.9;
@@ -188,29 +252,42 @@ switch (type) {
   }
 }
 
-const tiles = [...on].map((i) => ({
-  x: (i % N) * CELL,
-  y: Math.floor(i / N) * CELL,
-}));
+/* Merge each row into horizontal runs. For the solid panels this
+   means a stroke is one rect with no seam down it; for the gutter
+   marks the run length is always 1, so nothing changes. */
+const tiles: { x: number; y: number; w: number; h: number }[] = [];
+for (let y = 0; y < ROWS; y++) {
+  let x = 0;
+  while (x < COLS) {
+    if (!on.has(y * COLS + x)) {
+      x++;
+      continue;
+    }
+    const start = x;
+    while (x < COLS && on.has(y * COLS + x)) x++;
+    const len = GAP > 0 ? 1 : x - start;
+    if (GAP > 0) {
+      for (let k = start; k < x; k++) {
+        tiles.push({ x: k * CELL, y: y * CELL, w: CELL - GAP, h: CELL - GAP });
+      }
+    } else {
+      tiles.push({ x: start * CELL, y: y * CELL, w: len * CELL, h: CELL });
+    }
+  }
+}
 ---
 
 <svg
   class:list={["mark", `mark--${type}`, className]}
-  style={height ? `height:${height};width:auto` : `width:${width}`}
-  viewBox={`0 0 ${SPAN} ${SPAN}`}
+  style={`${height ? `height:${height};width:auto` : `width:${width}`};aspect-ratio:${COLS} / ${ROWS}`}
+  viewBox={`0 0 ${VB_W} ${VB_H}`}
   aria-hidden="true"
   focusable="false"
   shape-rendering="crispEdges"
 >
   {
     tiles.map((t) => (
-      <rect
-        x={t.x}
-        y={t.y}
-        width={CELL - GAP}
-        height={CELL - GAP}
-        fill="currentColor"
-      />
+      <rect x={t.x} y={t.y} width={t.w} height={t.h} fill="currentColor" />
     ))
   }
 </svg>
@@ -221,9 +298,8 @@ const tiles = [...on].map((i) => ({
     color: inherit;
     flex: none;
     max-width: 100%;
-    /* Every generated mark is square. Stating it means `height: X;
-       width: auto` resolves — without it the width collapses to 0
-       inside a flex or absolutely positioned box. */
-    aspect-ratio: 1 / 1;
+    /* The ratio is set inline per shape. Stating it at all is what
+       lets `height: X; width: auto` resolve — without it the width
+       collapses to 0 in a flex or absolutely positioned box. */
   }
 </style>

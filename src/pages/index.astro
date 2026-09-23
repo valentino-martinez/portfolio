@@ -121,8 +121,12 @@ const portrait = existsSync(MEDIA)
       </div>
     </div>
 
-    <span class="obj obj--statement" aria-hidden="true">
-      <Mark type="spiral" width="min(30vw, 260px)" grid={20} seed={41} />
+    <span class="shape shape--sunset" data-avoid aria-hidden="true">
+      <Mark type="sunset" width="min(34vw, 460px)" seed={2} />
+    </span>
+
+    <span class="shape shape--spiral" data-avoid aria-hidden="true">
+      <Mark type="spiral" width="min(26vw, 300px)" grid={20} seed={41} />
     </span>
 
     <div class="statement__wedge" data-reveal>
@@ -134,6 +138,10 @@ const portrait = existsSync(MEDIA)
 
   {/* ============ WORK ============================================ */}
   <section class="page section" id="work" data-rail-label="Work">
+    <span class="shape shape--wave" data-avoid aria-hidden="true">
+      <Mark type="wave" width="min(30vw, 400px)" seed={71} />
+    </span>
+
     <div class="section__head">
       <h2 class="label label--wide">
         <span class="section__no num">02</span> Selected Work
@@ -177,6 +185,10 @@ const portrait = existsSync(MEDIA)
 
   {/* ============ WRITING ========================================= */}
   <section class="page section" id="writing" data-rail-label="Writing">
+    <span class="shape shape--dissolve" data-avoid aria-hidden="true">
+      <Mark type="checker" width="min(30vw, 380px)" grid={18} seed={5} />
+    </span>
+
     <div class="section__head">
       <h2 class="label label--wide">
         <span class="section__no num">03</span> Recent Writing
@@ -223,8 +235,8 @@ const portrait = existsSync(MEDIA)
 
     <Ruler step={8} major={5} height={12} />
 
-    <span class="obj obj--studio" aria-hidden="true">
-      <Mark type="stack" width="min(26vw, 220px)" grid={16} seed={23} />
+    <span class="shape shape--stack" data-avoid aria-hidden="true">
+      <Mark type="stack" width="min(24vw, 260px)" grid={16} seed={23} />
     </span>
 
     {
@@ -260,6 +272,10 @@ const portrait = existsSync(MEDIA)
 
   {/* ============ CLOSING ========================================= */}
   <section class="page section" id="close" data-rail-label="Contact">
+    <span class="shape shape--arc" data-avoid aria-hidden="true">
+      <Mark type="arc" width="min(46vw, 620px)" seed={9} />
+    </span>
+
     <div class="closing">
       <Plate no="0.2" caption="Plate reserved" meta="EMPTY">
         <div class="plate-empty plate-empty--16x9">
@@ -339,7 +355,12 @@ const portrait = existsSync(MEDIA)
     position: absolute;
     top: 0;
     bottom: 0;
-    left: calc(var(--gutter) * -1 + 26px);
+    /* Flush to the viewport edge, not the page gutter. The stage is
+       a centred, max-width box, so `left: 0` would stop at its own
+       left edge; `50% - 50vw` is that distance back out to the screen.
+       .poster clips the overflow, so a scrollbar-width overhang on
+       browsers that count it in 50vw cannot cause a sideways scroll. */
+    left: calc(50% - 50vw);
     display: flex;
     align-items: center;
     z-index: 0;
@@ -475,32 +496,52 @@ const portrait = existsSync(MEDIA)
     }
   }
 
-  /* ---------- occasional objects ------------------------------
-     One per section at most, in the margin, at text scale. They are
-     punctuation, not weather. --------------------------------- */
-  .obj {
-    position: absolute;
-    display: block;
-    opacity: 0.75;
-    pointer-events: none;
-    z-index: 1;
+  /* ---------- background shapes ------------------------------
+     Each one hangs off a screen edge, behind the content. `50% -
+     50vw` reaches from a centred max-width section back out to the
+     viewport edge. All are marked data-avoid, so collide.ts slides
+     them further out or drops them if they land on text. --------- */
+
+  .shape--sunset {
+    right: calc(50% - 50vw);
+    top: 6%;
+    --shape-opacity: 0.5;
   }
 
-  .obj--statement {
-    right: 0;
-    top: 30%;
-  }
-  .obj--studio {
-    right: 2%;
-    top: -1rem;
-  }
-  .obj--close {
-    left: -1rem;
+  .shape--spiral {
+    left: calc(50% - 50vw);
     bottom: 4%;
+    --shape-opacity: 0.35;
   }
 
+  .shape--wave {
+    left: calc(50% - 50vw);
+    top: 10%;
+    --shape-opacity: 0.45;
+  }
+
+  .shape--dissolve {
+    right: calc(50% - 50vw);
+    top: 14%;
+    --shape-opacity: 0.4;
+  }
+
+  .shape--stack {
+    right: calc(50% - 50vw);
+    top: -2rem;
+    --shape-opacity: 0.4;
+  }
+
+  .shape--arc {
+    left: calc(50% - 50vw);
+    bottom: 8%;
+    --shape-opacity: 0.35;
+  }
+
+  /* Below this the page is one narrow column and there is no margin
+     for a shape to live in; collide.ts would hide them all anyway. */
   @media (max-width: 52rem) {
-    .obj {
+    .shape {
       display: none;
     }
   }
@@ -512,6 +553,14 @@ const portrait = existsSync(MEDIA)
      z-index lifts the content clear of the field layer. */
   .section {
     border-top: 0;
+    /* Clip the shapes that hang past the viewport edge, so none of
+       them can create a horizontal scrollbar. */
+    overflow: hidden;
+  }
+
+  /* Content sits above the shape layer. */
+  .section > *:not(.shape) {
+    position: relative;
     z-index: 1;
   }
 

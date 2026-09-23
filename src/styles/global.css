@@ -347,6 +347,30 @@ a {
 }
 
 /* ============================================================
+   BACKGROUND SHAPES
+
+   Decoration that sits behind the page. `data-avoid` opts a shape
+   into the collision pass in src/lib/collide.ts, which slides it
+   outward if it lands on text and hides it if it still cannot fit.
+   ============================================================ */
+
+.shape {
+  position: absolute;
+  display: block;
+  z-index: 0;
+  pointer-events: none;
+  opacity: var(--shape-opacity, 0.4);
+  /* Written by collide.ts when a shape has to move to clear text. */
+  transform: translateX(var(--avoid-shift, 0));
+}
+
+.shape[data-clash] {
+  /* No room for it at this width. An absent ornament is cheap; one
+     sitting across a sentence is not. */
+  display: none;
+}
+
+/* ============================================================
    EMPTY PLATES
 
    A reserved rectangle, nothing in it. These used to hold
