@@ -18,6 +18,7 @@ import { initCursor } from "./cursor";
 import { initTheme } from "./theme";
 import { initRails } from "./rail";
 import { initCollide } from "./collide";
+import { initTypelock } from "./typelock";
 
 /* ------------------------------------------------------------
    Live readouts — the terminal-status-line furniture.
@@ -71,6 +72,7 @@ function boot(): void {
   initReadouts();
   initRails();
   initCollide();
+  initTypelock();
 }
 
 if (document.readyState === "loading") {

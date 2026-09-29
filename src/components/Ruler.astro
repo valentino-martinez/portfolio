@@ -10,8 +10,11 @@ interface Props {
   /** Every Nth tick is full height. */
   major?: number;
   height?: number;
-  /** Print the running count above the majors. */
+  /** Print the running count above the majors, the whole way. */
   numbered?: boolean;
+  /** Widest screen the numbering needs to reach, in px. Anything
+   *  past the container is clipped, so over-generating is free. */
+  reach?: number;
   /** Ticks hang from the top edge instead of standing on the bottom. */
   flip?: boolean;
   class?: string;
@@ -21,11 +24,15 @@ const {
   major = 5,
   height = 14,
   numbered = false,
+  reach = 4000,
   flip = false,
   class: className = "",
 } = Astro.props;
 
-const count = numbered ? 24 : 0;
+/* Enough labels to cover `reach`, rather than a fixed two dozen
+   that stopped partway across a wide screen. The strip clips, so
+   the surplus costs nothing but a few spans. */
+const count = numbered ? Math.ceil(reach / (step * major)) : 0;
 ---
 
 <div

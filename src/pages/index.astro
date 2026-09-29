@@ -3,14 +3,12 @@ import { existsSync, readdirSync } from "node:fs";
 import { getCollection } from "astro:content";
 import Base from "../layouts/Base.astro";
 import Photo from "../components/Photo.astro";
-import Sketch from "../components/Sketch.astro";
 import Texture from "../components/Texture.astro";
 import Plate from "../components/Plate.astro";
 import EntryRow from "../components/EntryRow.astro";
 import Ruler from "../components/Ruler.astro";
 import ToneScale from "../components/ToneScale.astro";
-import Marquee from "../components/Marquee.astro";
-import { site, ticker } from "../site";
+import { site } from "../site";
 import { byDateDesc, publicOnly, shortStamp, stamp } from "../lib/format";
 
 const projects = publicOnly(await getCollection("projects"))
@@ -19,10 +17,6 @@ const projects = publicOnly(await getCollection("projects"))
   .slice(0, 3);
 
 const posts = publicOnly(await getCollection("blog")).sort(byDateDesc).slice(0, 4);
-
-const ceramics = publicOnly(await getCollection("ceramics")).sort(byDateDesc);
-const wood = publicOnly(await getCollection("woodworking")).sort(byDateDesc);
-const studio = [...ceramics.slice(0, 2), ...wood.slice(0, 2)];
 
 /* The headshot. Drop any `portrait.*` into public/media/ and it is
    picked up here at build time — no code change, no config. Until
@@ -37,19 +31,13 @@ const portrait = existsSync(MEDIA)
 
 ---
 
-<Base section="Index — 00" ticker={false} description={site.description}>
+<Base section="Index — 00" description={site.description}>
   {/* ============ THE POSTER =====================================
       Three shapes far bigger than the viewport, the figure, and the
       type — all on one sheet, all overlapping, none of it in a box.
       ============================================================ */}
   <section class="poster" id="poster" data-rail-label="Masthead">
     <div class="poster__stage">
-      {/* The big object lives at the very left edge, out by the
-          rail and further left than the photograph, sitting behind
-          everything as a piece of the page rather than on top of it. */}
-      <span class="poster__edge" data-avoid aria-hidden="true">
-        <Sketch type="plane" width="min(22vw, 260px)" seed={17} />
-      </span>
 
       <figure class="poster__figure">
         {
@@ -64,9 +52,6 @@ const portrait = existsSync(MEDIA)
         <figcaption class="poster__whisper">the spiritual double</figcaption>
       </figure>
 
-      <span class="poster__obj poster__obj--orbit" data-avoid aria-hidden="true">
-        <Sketch type="target" width="min(13vw, 165px)" seed={3} />
-      </span>
 
       <p class="poster__note poster__note--a label num">
         LAT 37.4275<br />LON −122.1697
@@ -84,15 +69,14 @@ const portrait = existsSync(MEDIA)
 
     {/* The baseline, straight off the foot of the original sheet. */}
     <div class="poster__base">
-      <Ruler step={8} major={5} height={16} numbered />
-      <Marquee items={ticker} class="poster__chain" />
+      <Ruler step={8} major={5} height={18} numbered />
     </div>
   </section>
 
   {/* ============ STATEMENT ======================================= */}
   <section class="page section" id="statement" data-rail-label="Statement">
     <div class="statement">
-      <p class="statement__lede" data-reveal>
+      <p class="statement__lede" data-typelock>
         I make things and then I write about making them. Some of it is
         screens. Some of it is clay. Some of it is a pile of walnut
         offcuts that will eventually become a box.
@@ -208,49 +192,6 @@ const portrait = existsSync(MEDIA)
   </section>
 
 
-  {/* ============ STUDIO ========================================== */}
-  <section class="page section" id="studio" data-rail-label="Studio">
-    <div class="section__head">
-      <h2 class="label label--wide">
-        <span class="section__no num">04</span> Studio — Clay &amp; Wood
-      </h2>
-      <span class="label num section__more">
-        <a href="/ceramics/" data-scramble>Ceramics</a> ·
-        <a href="/woodworking/" data-scramble>Woodworking</a>
-      </span>
-    </div>
-
-    <Ruler step={8} major={5} height={12} />
-
-    {
-      studio.length > 0 ? (
-        <div class="grid grid--4" data-reveal-group="70">
-          {studio.map((item, i) => {
-            const isClay = "clay" in item.data;
-            const base = isClay ? "ceramics" : "woodworking";
-            return (
-              <a class="card card--tight" href={`/${base}/${item.id}/`} data-reveal>
-                <Plate no={`4.${i + 1}`} caption={item.data.title} hover>
-                  {item.data.cover ? (
-                    <Photo src={item.data.cover} alt={item.data.coverAlt ?? ""} ratio="1/1" />
-                  ) : (
-                    <div class="plate-empty plate-empty--1x1">
-                      <Texture type={["crosshatch", "stipple", "scan", "grid"][i % 4] as never} seed={i * 11 + 5} density={0.4} />
-                    </div>
-                  )}
-                </Plate>
-              </a>
-            );
-          })}
-        </div>
-      ) : (
-        <p class="empty label">
-          Nothing in the studio yet — add files to src/content/ceramics/ or
-          src/content/woodworking/.
-        </p>
-      )
-    }
-  </section>
 
 
   {/* ============ CLOSING ========================================= */}
@@ -304,53 +245,14 @@ const portrait = existsSync(MEDIA)
     justify-content: center;
   }
 
-  /* Occasional objects, sized like a paragraph rather than like a
-     billboard. They sit in the page and scroll with it — no
-     parallax, no rotation, nothing that moves on its own. */
-  .poster__obj {
-    position: absolute;
-    display: block;
-    pointer-events: none;
-    z-index: 1;
-    transform: translate(var(--avoid-x, 0), var(--avoid-y, 0));
-  }
 
-  .poster__obj--orbit {
-    right: -6%;
-    top: -4%;
-  }
 
-  .poster__obj--checker {
-    left: 2%;
-    bottom: 14%;
-  }
 
   /* The object hangs off the left edge of the stage, out past the
      page gutter so it nearly touches the rail, and runs the full
      height of the block. z-index 0 keeps it behind the picture and
      the type — it is part of the sheet, not a sticker on it. */
-  .poster__edge {
-    position: absolute;
-    /* Height comes from the drawing. Stretching this top-to-bottom
-       made collide.ts measure a box the height of the whole stage
-       rather than the height of the thing inside it, so it could
-       never find anywhere that box would fit. */
-    top: var(--s-12);
-    /* Flush to the viewport edge rather than the page gutter: the
-       stage is a centred max-width box, so `left: 0` would stop at
-       its own edge, and `50% - 50vw` is the distance back out to
-       the screen. collide.ts keeps it from actually hanging off. */
-    left: calc(50% - 50vw);
-    display: block;
-    z-index: 0;
-    pointer-events: none;
-    transform: translate(var(--avoid-x, 0), var(--avoid-y, 0));
-  }
 
-  .poster__edge[data-clash],
-  .poster__obj[data-clash] {
-    display: none;
-  }
 
   /* Room on the left for it, so the photograph is not sitting on top
      of the object it is meant to be next to. */
@@ -406,18 +308,11 @@ const portrait = existsSync(MEDIA)
     padding-inline: var(--gutter);
   }
 
-  .poster__chain {
-    padding-top: 0;
-    padding-bottom: var(--s-3);
-  }
 
   @media (max-width: 52rem) {
     .poster__stage {
       min-height: 0;
       padding-top: var(--s-8);
-    }
-    .poster__edge {
-      display: none;
     }
     .poster__figure {
       width: 100%;
@@ -429,9 +324,6 @@ const portrait = existsSync(MEDIA)
       bottom: -2rem;
     }
     .poster__note {
-      display: none;
-    }
-    .poster__obj--checker {
       display: none;
     }
     .poster__name,

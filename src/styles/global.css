@@ -347,6 +347,25 @@ a {
 }
 
 /* ============================================================
+   TYPELOCK
+
+   The untyped remainder is transparent rather than absent, so the
+   paragraph occupies its final size from the start and cannot
+   reflow while the page is being held still. Transparent is not
+   grey: no pixel is tinted.
+   ============================================================ */
+
+.typelock__rest {
+  color: transparent;
+}
+
+/* A block caret while it writes, gone once it has. */
+[data-typelock-ready]:not([data-typelock-done]) .typelock__rest::before {
+  content: "\2588";
+  color: var(--ink);
+}
+
+/* ============================================================
    BACKGROUND SHAPES
 
    Decoration that sits behind the page. `data-avoid` opts a shape

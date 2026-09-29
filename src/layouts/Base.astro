@@ -8,21 +8,17 @@
  * there is JavaScript to disarm them again.
  */
 import "../styles/global.css";
-import { site, ticker } from "../site";
+import { site } from "../site";
 import Masthead from "../components/Masthead.astro";
 import Colophon from "../components/Colophon.astro";
 import Grain from "../components/Grain.astro";
-import Marquee from "../components/Marquee.astro";
 import SideRail from "../components/SideRail.astro";
-import Backdrop from "../components/Backdrop.astro";
 
 interface Props {
   title?: string;
   description?: string;
   /** Printed in the top-left running head of the page body. */
   section?: string;
-  /** Hide the word-chain strip under the masthead. */
-  ticker?: boolean;
   /** Paper grain: 1 shows it, 0 removes it. Density is set in
    *  Grain.astro, not here — fading it would reintroduce grey. */
   grain?: number;
@@ -33,7 +29,6 @@ const {
   title,
   description = site.description,
   section,
-  ticker: showTicker = true,
   grain = 1,
   class: className = "",
 } = Astro.props;
@@ -110,13 +105,8 @@ const favicon = "data:image/svg+xml," + encodeURIComponent(FAVICON_SVG);
 
     <Masthead />
 
-    {showTicker && <Marquee items={ticker} class="shell__ticker" />}
 
     <main id="main" class="shell">
-      {/* Positions are percentages of <main>, so the set spreads
-          down the whole page rather than clustering in a section. */}
-      <Backdrop seed={Astro.url.pathname} />
-
       {
         section && (
           <div class="page shell__runhead">
@@ -143,9 +133,6 @@ const favicon = "data:image/svg+xml," + encodeURIComponent(FAVICON_SVG);
     position: relative;
   }
 
-  .shell__ticker {
-    border-bottom: var(--hair);
-  }
 
   .shell__runhead {
     display: flex;
