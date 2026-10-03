@@ -5,18 +5,13 @@ import Base from "../layouts/Base.astro";
 import Photo from "../components/Photo.astro";
 import Texture from "../components/Texture.astro";
 import Plate from "../components/Plate.astro";
-import EntryRow from "../components/EntryRow.astro";
-import Ruler from "../components/Ruler.astro";
-import ToneScale from "../components/ToneScale.astro";
 import { site } from "../site";
-import { byDateDesc, publicOnly, shortStamp, stamp } from "../lib/format";
+import { byDateDesc, publicOnly } from "../lib/format";
 
 const projects = publicOnly(await getCollection("projects"))
   .sort(byDateDesc)
   .sort((a, b) => Number(b.data.featured) - Number(a.data.featured))
   .slice(0, 3);
-
-const posts = publicOnly(await getCollection("blog")).sort(byDateDesc).slice(0, 4);
 
 /* The headshot. Drop any `portrait.*` into public/media/ and it is
    picked up here at build time — no code change, no config. Until
@@ -28,97 +23,55 @@ const portrait = existsSync(MEDIA)
       .filter((f) => /^portrait\.(jpe?g|png|webp|avif)$/i.test(f))
       .map((f) => `/media/${f}`)[0]
   : undefined;
-
 ---
 
-<Base section="Index — 00" description={site.description}>
+<Base description={site.description}>
   {/* ============ THE POSTER =====================================
-      Three shapes far bigger than the viewport, the figure, and the
-      type — all on one sheet, all overlapping, none of it in a box.
+      Two masses on a diagonal: the plate at the right trim, the
+      wordmark panel holding the left. Nothing centred in a void.
       ============================================================ */}
-  <section class="poster" id="poster" data-rail-label="Masthead">
-    <div class="poster__stage">
+  <section class="poster" id="poster">
+    <div class="poster__sheet">
 
+      {/* The photograph, mounted: a paper mat, then the picture
+          itself cropped in on the subject. The inner box is what
+          clips the zoom, so the scale never spills onto the mat. */}
       <figure class="poster__figure">
-        {
-          portrait ? (
-            <Photo src={portrait} alt={site.name} ratio="3/2" loading="eager" />
-          ) : (
-            <div class="plate-empty plate-empty--portrait">
-              <span class="label num">PORTRAIT</span>
-            </div>
-          )
-        }
-        <figcaption class="poster__whisper">the spiritual double</figcaption>
+        <div class="poster__shot">
+          {
+            portrait ? (
+              <Photo src={portrait} alt={site.name} ratio="3/2" loading="eager" />
+            ) : (
+              <div class="plate-empty plate-empty--portrait">
+                <span class="label num">PORTRAIT</span>
+              </div>
+            )
+          }
+        </div>
       </figure>
 
-
-      <p class="poster__note poster__note--a label num">
-        LAT 37.4275<br />LON −122.1697
-      </p>
-      <p class="poster__note poster__note--b label num">
-        1-BIT · ATKINSON<br />PLATE 1/1
-      </p>
-
-      <h1 class="poster__name title title--xl">{site.name}</h1>
-
-      <p class="poster__role label label--wide">
-        {site.role} · {site.location} · {stamp(new Date())}
-      </p>
-    </div>
-
-    {/* The baseline, straight off the foot of the original sheet. */}
-    <div class="poster__base">
-      <Ruler step={8} major={5} height={18} numbered />
+      {/* The wordmark is artwork: the field, the name and the role
+          line are all baked into one 4x export, so the alt text has
+          to carry both lines. */}
+      <h1 class="poster__block">
+        <img
+          class="poster__mark"
+          src="/media/wordmark.png"
+          alt={`${site.name} — ${site.role}`}
+          width="838"
+          height="341"
+          loading="eager"
+        />
+      </h1>
     </div>
   </section>
-
-  {/* ============ STATEMENT ======================================= */}
-  <section class="page section" id="statement" data-rail-label="Statement">
-    <div class="statement">
-      <p class="statement__lede" data-typelock>
-        I make things and then I write about making them. Some of it is
-        screens. Some of it is clay. Some of it is a pile of walnut
-        offcuts that will eventually become a box.
-      </p>
-
-      <div class="columns statement__body" data-reveal>
-        <p>
-          This site is deliberately built out of two colours. Every
-          photograph you see has been thrown through a dithering
-          algorithm in your browser and reduced to pure black and pure
-          white — the same trick that let a 1984 Macintosh with no
-          greyscale at all pretend it had a camera.
-        </p>
-        <p>
-          What looks like grey is a lie your eye is telling you. Get
-          close to the screen and the illusion falls apart into a field
-          of dots; step back and a photograph reassembles itself. That
-          gap between what is there and what you see is more or less
-          the whole reason I like design.
-        </p>
-        <p>
-          Underneath the noise it is a plain, fast, accessible document.
-          Turn JavaScript off and you still get everything: the writing,
-          the work, the photographs, unprocessed. Nothing here moves on
-          its own — the page only moves when you do.
-        </p>
-      </div>
-    </div>
-
-    <div class="statement__wedge" data-reveal>
-      <p class="label" style="margin-bottom: 0.6rem">Fig. 0.1 — Step wedge</p>
-      <ToneScale steps={12} pitch={6} height={40} />
-    </div>
-  </section>
-
 
   {/* ============ WORK ============================================ */}
-  <section class="page section" id="work" data-rail-label="Work">
+  <section class="page section" id="work">
 
     <div class="section__head">
       <h2 class="label label--wide">
-        <span class="section__no num">02</span> Selected Work
+        <span class="section__no num">01</span> Selected Work
       </h2>
       <a class="section__more label" href="/projects/" data-scramble>
         All projects →
@@ -127,7 +80,7 @@ const portrait = existsSync(MEDIA)
 
     {
       projects.length > 0 ? (
-        <div class="grid grid--3" data-reveal-group="90">
+        <div class="grid grid--3" data-reveal-group="110">
           {projects.map((p, i) => (
             <a class="card" href={`/projects/${p.id}/`} data-reveal>
               <Plate
@@ -143,8 +96,8 @@ const portrait = existsSync(MEDIA)
                     <Texture type={["hatch", "ramp", "contour"][i % 3] as never} seed={i * 7 + 3} density={0.45} />
                   </div>
                 )}
+                <p class="card__summary">{p.data.summary}</p>
               </Plate>
-              <p class="card__summary">{p.data.summary}</p>
             </a>
           ))}
         </div>
@@ -157,45 +110,11 @@ const portrait = existsSync(MEDIA)
   </section>
 
 
-  {/* ============ WRITING ========================================= */}
-  <section class="page section" id="writing" data-rail-label="Writing">
-
-    <div class="section__head">
-      <h2 class="label label--wide">
-        <span class="section__no num">03</span> Recent Writing
-      </h2>
-      <a class="section__more label" href="/blog/" data-scramble>
-        All posts →
-      </a>
-    </div>
-
-    {
-      posts.length > 0 ? (
-        <ul class="rows" data-reveal-group="60">
-          {posts.map((post, i) => (
-            <EntryRow
-              href={`/blog/${post.id}/`}
-              no={`3.${i + 1}`}
-              title={post.data.title}
-              summary={post.data.summary}
-              date={shortStamp(post.data.date)}
-              tags={post.data.tags}
-            />
-          ))}
-        </ul>
-      ) : (
-        <p class="empty label">
-          No posts yet — add a markdown file to src/content/blog/.
-        </p>
-      )
-    }
-  </section>
-
 
 
 
   {/* ============ CLOSING ========================================= */}
-  <section class="page section" id="close" data-rail-label="Contact">
+  <section class="page section" id="close">
 
     <div class="closing">
       <Plate no="0.2" caption="Plate reserved" meta="EMPTY">
@@ -231,139 +150,135 @@ const portrait = existsSync(MEDIA)
 
   .poster {
     position: relative;
-    border-bottom: var(--hair);
+    /* Display width of the wordmark. The artwork is a 4x export at
+       838x341, so every size here samples it down — which is why
+       there is no image-rendering override. */
+    --mark-w: 340px;
+    padding-top: var(--s-8);
+    /* Room for the wordmark to hang below the picture. */
+    padding-bottom: var(--s-12);
   }
 
-  .poster__stage {
-    position: relative;
-    max-width: var(--page-max);
-    margin-inline: auto;
-    padding: var(--s-16) var(--gutter) var(--s-8);
-    min-height: min(84vh, 46rem);
-    display: flex;
-    flex-direction: column;
-    justify-content: center;
-  }
-
-
-
-
-  /* The object hangs off the left edge of the stage, out past the
-     page gutter so it nearly touches the rail, and runs the full
-     height of the block. z-index 0 keeps it behind the picture and
-     the type — it is part of the sheet, not a sticker on it. */
-
-
-  /* Room on the left for it, so the photograph is not sitting on top
-     of the object it is meant to be next to. */
-  .poster__figure {
-    position: relative;
-    z-index: 2;
-    /* Flush to the left of the stage rather than pushed right. */
-    margin: 0 auto 0 0;
-    width: min(52%, 32rem);
-  }
-
-  /* The light, lowercase aside — the "the spiritual double" voice. */
-  .poster__whisper {
-    position: absolute;
-    right: -3rem;
-    top: 12%;
-    font-family: var(--font-serif);
-    font-size: clamp(0.9rem, 1.7vw, 1.5rem);
-    white-space: nowrap;
-  }
-
-  .poster__note {
-    position: absolute;
-    z-index: 3;
-    line-height: 1.5;
-  }
-  .poster__note--a {
-    left: var(--gutter);
-    bottom: 24%;
-  }
-  .poster__note--b {
-    right: var(--gutter);
-    top: 30%;
-    text-align: right;
-  }
-
-  .poster__name {
-    position: relative;
-    z-index: 3;
-    margin: var(--s-12) 0 var(--s-3) auto;
-    max-width: 22ch;
-  }
-
-  .poster__role {
-    position: relative;
-    z-index: 3;
-    text-align: right;
-  }
-
-  .poster__base {
-    position: relative;
-    z-index: 3;
-    padding-inline: var(--gutter);
-  }
-
-
-  @media (max-width: 52rem) {
-    .poster__stage {
-      min-height: 0;
-      padding-top: var(--s-8);
+  @media (min-width: 52rem) {
+    .poster {
+      --mark-w: 420px;
     }
-    .poster__figure {
-      width: 100%;
-    }
-    .poster__whisper {
-      right: auto;
-      left: 0;
-      top: auto;
-      bottom: -2rem;
-    }
-    .poster__note {
-      display: none;
-    }
-    .poster__name,
-    .poster__role {
-      margin-left: 0;
-      text-align: left;
-      width: 100%;
-    }
-  }
-
-  /* ---------- statement -------------------------------------- */
-  .statement {
-    display: grid;
-    grid-template-columns: minmax(0, 1fr);
-    gap: var(--s-8);
-  }
-
-  .statement__lede {
-    font-size: var(--t-lg);
-    line-height: var(--lead-snug);
-    max-width: 24ch;
-    text-wrap: balance;
-  }
-
-  .statement__wedge {
-    margin-top: var(--s-12);
-    max-width: 44rem;
   }
 
   @media (min-width: 60rem) {
-    .statement {
-      grid-template-columns: 1fr 1.3fr;
-      gap: var(--s-16);
-      align-items: start;
-    }
-    .statement__lede {
-      position: sticky;
-      top: 5rem;
+    .poster {
+      --mark-w: 500px;
     }
   }
+
+  @media (min-width: 80rem) {
+    .poster {
+      --mark-w: 600px;
+    }
+  }
+
+
+  /* Ten columns of paper. Everything below places itself on these,
+     so the overlaps survive a reflow instead of being nudged into
+     position with percentages. */
+  .poster__sheet {
+    position: relative;
+    display: grid;
+    grid-template-columns: repeat(10, minmax(0, 1fr));
+    align-items: start;
+    /* The same column as every other section, so the masthead shares
+       one left edge with the page instead of bleeding past it. */
+    max-width: var(--page-max);
+    margin-inline: auto;
+    padding-inline: var(--gutter);
+  }
+
+  /* ---------- the photograph ---------------------------------
+     Held to the right trim and run large, with the wordmark lying
+     across its bottom left corner. */
+  .poster__figure {
+    grid-column: 4 / 11;
+    grid-row: 1;
+    justify-self: end;
+    width: 100%;
+    margin: 0;
+    z-index: 0;
+  }
+
+  /* Clips the zoom below, so the enlarged picture cannot paint over
+     the mat around it. */
+  .poster__shot {
+    overflow: hidden;
+  }
+
+  .poster__shot :global(.photo) {
+    /* Cropped in on the subject. The source is the same 3:2 frame;
+       this just enlarges it inside a box of that shape. */
+    transform: scale(1.22);
+    transform-origin: 50% 42%;
+  }
+
+  /* ---------- the wordmark ----------------------------------
+     Placed, not drawn — the export carries its own field, type and
+     notched edge. */
+  .poster__block {
+    /* Same row as the photograph, pinned to its foot, so the mark
+       lies across the bottom left of the picture and hangs below
+       it. */
+    grid-column: 1 / 7;
+    grid-row: 1;
+    align-self: end;
+    justify-self: start;
+    margin: 0 0 calc(var(--s-12) * -1);
+    /* The width lives on the wrapper, not the image: an <img> with
+       max-width:100% inside a shrink-to-fit box sizes itself from a
+       box that is sized from it, and collapses to its intrinsic
+       width. */
+    width: var(--mark-w);
+    max-width: 100%;
+    z-index: 1;
+    line-height: 0;
+  }
+
+  .poster__mark {
+    display: block;
+    width: 100%;
+    height: auto;
+  }
+
+  /* The mark is a fixed raster — light type on a dark field — so it
+     has to be flipped by hand when the page flips, or it sits as a
+     dark block on dark paper. These two conditions mirror the ones
+     tokens.css uses to swap ink and paper, including the no-JS case
+     where the attribute is still at its "off" default. */
+  :global(html[data-invert="on"]) .poster__mark {
+    filter: invert(1);
+  }
+
+  @media (prefers-color-scheme: dark) {
+    :global(html:not([data-invert="off"])) .poster__mark {
+      filter: invert(1);
+    }
+  }
+
+
+
+
+  /* The tracked-out ghost line under the chain. */
+
+  @media (max-width: 52rem) {
+    /* One column: the picture runs full width and the wordmark
+       still lies across the foot of it. */
+    .poster__figure {
+      grid-column: 1 / 11;
+      justify-self: start;
+    }
+    .poster__block {
+      grid-column: 1 / 10;
+      margin-bottom: calc(var(--s-8) * -1);
+    }
+  }
+
 
   /* ---------- section chrome ---------------------------------
      No rules between sections on this page: a full-width hairline
@@ -414,15 +329,73 @@ const portrait = existsSync(MEDIA)
     margin-top: var(--s-6);
   }
 
+
+  /* ---------- cards ------------------------------------------
+     The summary rides inside the plate, parked below its bottom
+     edge and clipped by it, and slides up on hover or keyboard
+     focus. Transform only — nothing animates width or height, so
+     this stays on the compositor. */
   .card {
     text-decoration: none;
     display: block;
   }
 
   .card__summary {
-    margin-top: var(--s-3);
+    /* Bottom-anchored and auto-height, so it is only as tall as the
+       words and the artwork still shows above it. */
+    position: absolute;
+    inset: auto 0 0 0;
+    z-index: 1;
+    display: grid;
+    gap: var(--s-2);
+    margin: 0;
+    padding: var(--s-4);
+    background: var(--ink);
+    color: var(--paper);
     font-size: var(--t-sm);
     line-height: var(--lead-body);
+    transform: translateY(100%);
+    transition: transform var(--dur-base) var(--ease-mech);
+  }
+
+  .card:hover .card__summary,
+  .card:focus-visible .card__summary {
+    transform: none;
+  }
+
+  /* A small lift, so the whole plate answers the pointer and not
+     just the panel. */
+  .card:hover :global(.plate) {
+    transform: translateY(-3px);
+  }
+  .card :global(.plate) {
+    transition: transform var(--dur-base) var(--ease-mech);
+  }
+
+  /* A more deliberate entrance than the page default: further to
+     travel, longer to settle. The stagger comes from the group. */
+  :global(html.js-ready) .card[data-reveal] {
+    --reveal-shift: 24px;
+    transition-duration: 520ms;
+  }
+
+  /* No pointer, so there is no hover to wait for: print it. */
+  @media (hover: none) {
+    .card__summary {
+      position: static;
+      transform: none;
+      padding: 0;
+      margin-top: var(--s-3);
+      background: none;
+      color: inherit;
+    }
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .card__summary,
+    .card :global(.plate) {
+      transition: none;
+    }
   }
 
   .card__blank {

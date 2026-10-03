@@ -3,8 +3,6 @@
  * SectionHead — the chapter opener. A numbered rule, a big bitmap
  * title, and an optional standfirst set in two columns.
  */
-import Ruler from "./Ruler.astro";
-
 interface Props {
   /** Chapter number, e.g. "03". */
   index?: string;
@@ -34,8 +32,6 @@ const {
     {count && <span class="label num head__count">{count}</span>}
   </div>
 
-  <Ruler step={6} major={6} height={10} />
-
   <h1 class="head__title title title--xl" data-reveal>{title}</h1>
 
   {
@@ -59,6 +55,8 @@ const {
     align-items: baseline;
     gap: var(--s-4);
     margin-bottom: var(--s-1);
+    padding-bottom: var(--s-2);
+    border-bottom: var(--hair);
   }
 
   .head__idx {

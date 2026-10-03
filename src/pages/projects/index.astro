@@ -15,11 +15,10 @@ const projects = publicOnly(await getCollection("projects"))
 
 <Base
   title="Projects"
-  section="Projects — 02"
   description="Selected design and build work."
 >
   <SectionHead
-    index="02"
+    index="01"
     title="Projects"
     kicker="Work"
     count={`${projects.length} ${projects.length === 1 ? "plate" : "plates"}`}
@@ -29,7 +28,7 @@ const projects = publicOnly(await getCollection("projects"))
   <div class="page">
     {
       projects.length > 0 ? (
-        <div class="grid" data-reveal-group="80">
+        <div class="grid" data-reveal-group="110">
           {projects.map((p, i) => (
             <a class="card" href={`/projects/${p.id}/`} data-reveal>
               <Plate
@@ -45,16 +44,15 @@ const projects = publicOnly(await getCollection("projects"))
                     <Texture type={["contour", "hatch", "ramp"][i % 3] as never} seed={i * 13 + 2} density={0.45} />
                   </div>
                 )}
+                <div class="card__summary">
+                  <p>{p.data.summary}</p>
+                  <p class="label card__specs">
+                    {[p.data.role, p.data.context, ...p.data.tools]
+                      .filter(Boolean)
+                      .join(" · ")}
+                  </p>
+                </div>
               </Plate>
-
-              <div class="card__meta">
-                <p class="card__summary">{p.data.summary}</p>
-                <p class="label card__specs">
-                  {[p.data.role, p.data.context, ...p.data.tools]
-                    .filter(Boolean)
-                    .join(" · ")}
-                </p>
-              </div>
             </a>
           ))}
         </div>
@@ -73,22 +71,77 @@ const projects = publicOnly(await getCollection("projects"))
     margin-bottom: var(--s-16);
   }
 
+
+  /* ---------- cards ------------------------------------------
+     The summary rides inside the plate, parked below its bottom
+     edge and clipped by it, and slides up on hover or keyboard
+     focus. Transform only — nothing animates width or height, so
+     this stays on the compositor. */
   .card {
     text-decoration: none;
     display: block;
   }
 
-  .card__meta {
-    margin-top: var(--s-3);
-  }
-
   .card__summary {
+    /* Bottom-anchored and auto-height, so it is only as tall as the
+       words and the artwork still shows above it. */
+    position: absolute;
+    inset: auto 0 0 0;
+    z-index: 1;
+    display: grid;
+    gap: var(--s-2);
+    margin: 0;
+    padding: var(--s-4);
+    background: var(--ink);
+    color: var(--paper);
     font-size: var(--t-sm);
     line-height: var(--lead-body);
+    transform: translateY(100%);
+    transition: transform var(--dur-base) var(--ease-mech);
+  }
+
+  .card:hover .card__summary,
+  .card:focus-visible .card__summary {
+    transform: none;
+  }
+
+  /* A small lift, so the whole plate answers the pointer and not
+     just the panel. */
+  .card:hover :global(.plate) {
+    transform: translateY(-3px);
+  }
+  .card :global(.plate) {
+    transition: transform var(--dur-base) var(--ease-mech);
+  }
+
+  /* A more deliberate entrance than the page default: further to
+     travel, longer to settle. The stagger comes from the group. */
+  :global(html.js-ready) .card[data-reveal] {
+    --reveal-shift: 24px;
+    transition-duration: 520ms;
+  }
+
+  /* No pointer, so there is no hover to wait for: print it. */
+  @media (hover: none) {
+    .card__summary {
+      position: static;
+      transform: none;
+      padding: 0;
+      margin-top: var(--s-3);
+      background: none;
+      color: inherit;
+    }
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .card__summary,
+    .card :global(.plate) {
+      transition: none;
+    }
   }
 
   .card__specs {
-    margin-top: var(--s-2);
+    margin: 0;
   }
 
   .empty {

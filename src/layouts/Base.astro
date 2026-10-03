@@ -10,26 +10,16 @@
 import "../styles/global.css";
 import { site } from "../site";
 import Masthead from "../components/Masthead.astro";
-import Colophon from "../components/Colophon.astro";
-import Grain from "../components/Grain.astro";
-import SideRail from "../components/SideRail.astro";
 
 interface Props {
   title?: string;
   description?: string;
-  /** Printed in the top-left running head of the page body. */
-  section?: string;
-  /** Paper grain: 1 shows it, 0 removes it. Density is set in
-   *  Grain.astro, not here — fading it would reintroduce grey. */
-  grain?: number;
   class?: string;
 }
 
 const {
   title,
   description = site.description,
-  section,
-  grain = 1,
   class: className = "",
 } = Astro.props;
 
@@ -65,13 +55,6 @@ const favicon = "data:image/svg+xml," + encodeURIComponent(FAVICON_SVG);
     <meta property="og:url" content={canonical} />
     <meta name="twitter:card" content="summary_large_image" />
 
-    <link
-      rel="alternate"
-      type="application/rss+xml"
-      title={`${site.name} — Blog`}
-      href="/rss.xml"
-    />
-
     {/* Runs before first paint. Keep it tiny and dependency-free. */}
     <script is:inline>
       (function () {
@@ -98,29 +81,13 @@ const favicon = "data:image/svg+xml," + encodeURIComponent(FAVICON_SVG);
     <a class="skip-link" href="#main">Skip to content</a>
 
 
-    <Grain opacity={grain} />
-
-    <SideRail side="left" />
-    <SideRail side="right" />
-
     <Masthead />
 
 
     <main id="main" class="shell">
-      {
-        section && (
-          <div class="page shell__runhead">
-            <span class="label label--wide">{section}</span>
-            <span class="label num" aria-hidden="true">
-              {site.mark}
-            </span>
-          </div>
-        )
-      }
       <slot />
     </main>
 
-    <Colophon />
 
     <script>
       import "../lib/main";
@@ -134,11 +101,4 @@ const favicon = "data:image/svg+xml," + encodeURIComponent(FAVICON_SVG);
   }
 
 
-  .shell__runhead {
-    display: flex;
-    justify-content: space-between;
-    align-items: baseline;
-    padding-block: var(--s-2);
-    border-bottom: var(--hair);
-  }
 </style>

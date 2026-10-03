@@ -1,7 +1,7 @@
 ---
 /**
  * Masthead — sticky running head. Wordmark, numbered nav, and the
- * instrument cluster (clock, scroll position, invert switch).
+ * invert switch.
  */
 import { nav, site } from "../site";
 
@@ -15,8 +15,11 @@ const isCurrent = (href: string) => {
 
 <header class="mast">
   <div class="mast__bar page">
+    {/* Placeholder mark. Swap the span for an <img> or an inline
+        <svg> when there is a real logo — the <a> and its sizing stay
+        as they are. */}
     <a class="mast__mark" href="/" aria-label={`${site.name} — home`}>
-      <span class="mast__wordmark title">{site.mark}</span>
+      <span class="mast__logo label" aria-hidden="true">LOGO</span>
     </a>
 
     <nav class="mast__nav" aria-label="Primary">
@@ -43,8 +46,6 @@ const isCurrent = (href: string) => {
     </nav>
 
     <div class="mast__instruments label">
-      <span class="mast__clock num" data-clock aria-hidden="true">--:--:--</span>
-      <span class="mast__scroll num" data-scroll-readout aria-hidden="true">000%</span>
       <button
         type="button"
         class="mast__invert"
@@ -85,8 +86,14 @@ const isCurrent = (href: string) => {
     align-self: stretch;
   }
 
-  .mast__wordmark {
-    font-size: 24px;
+  /* A dashed well, so it is obvious this is waiting for artwork. */
+  .mast__logo {
+    display: grid;
+    place-items: center;
+    width: 5.5rem;
+    height: 26px;
+    border: var(--rule) dashed var(--ink-40);
+    color: var(--ink-40);
   }
 
   /* --- nav ----------------------------------------------------- */
@@ -143,9 +150,6 @@ const isCurrent = (href: string) => {
     flex: none;
     display: flex;
     align-items: center;
-    gap: var(--s-3);
-    padding-left: var(--s-4);
-    border-left: var(--hair);
     align-self: stretch;
   }
 

@@ -1,19 +1,15 @@
 ---
 /**
  * Colophon — the back matter. Set like the last page of a book:
- * how it was made, where else to find the author, and a tick rule
- * to close the page off.
+ * how it was made, and where else to find the author.
  */
 import { links, site } from "../site";
-import Ruler from "./Ruler.astro";
 
 const year = new Date().getFullYear();
 const span = year > site.since ? `${site.since}–${year}` : `${site.since}`;
 ---
 
 <footer class="colophon">
-  <Ruler step={8} major={5} height={12} flip />
-
   <div class="page colophon__grid">
     <div class="colophon__block">
       <h2 class="label colophon__h">Colophon</h2>

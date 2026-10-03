@@ -1,9 +1,19 @@
 ---
+import { existsSync, readdirSync } from "node:fs";
 import Base from "../layouts/Base.astro";
 import SectionHead from "../components/SectionHead.astro";
 import Plate from "../components/Plate.astro";
-import ToneScale from "../components/ToneScale.astro";
+import Photo from "../components/Photo.astro";
 import { links, site } from "../site";
+
+/* Same build-time pickup as the home page: drop a `portrait.*` into
+   public/media/ and both pages find it. */
+const MEDIA = "public/media";
+const portrait = existsSync(MEDIA)
+  ? readdirSync(MEDIA)
+      .filter((f) => /^portrait\.(jpe?g|png|webp|avif)$/i.test(f))
+      .map((f) => `/media/${f}`)[0]
+  : undefined;
 
 /* Edit these three lists and the page rewrites itself. */
 const now = [
@@ -33,11 +43,10 @@ const tools = [
 
 <Base
   title="About"
-  section="About — 01"
   description={`About ${site.name} — ${site.role} in ${site.location}.`}
 >
   <SectionHead
-    index="01"
+    index="02"
     title="About"
     kicker="Who"
     lede="Designer. Sometime potter, sometime woodworker, full-time person who cannot leave a material alone once he has started poking at it."
@@ -46,9 +55,15 @@ const tools = [
   <div class="page about">
     <div class="about__portrait" data-reveal>
       <Plate no="1.1" caption={`${site.name}`} meta="PORTRAIT">
-        <div class="plate-empty plate-empty--portrait">
-          <span class="label num">PORTRAIT</span>
-        </div>
+        {
+          portrait ? (
+            <Photo src={portrait} alt={site.name} ratio="3/2" />
+          ) : (
+            <div class="plate-empty plate-empty--portrait">
+              <span class="label num">PORTRAIT</span>
+            </div>
+          )
+        }
       </Plate>
 
       <dl class="vitals">
@@ -156,15 +171,6 @@ const tools = [
         <h2 class="label panel__h">Tools</h2>
         <p class="tools">
           {tools.map((t) => <span class="tools__item">{t}</span>)}
-        </p>
-      </section>
-
-      <section class="panel" data-reveal>
-        <h2 class="label panel__h">Calibration</h2>
-        <ToneScale steps={16} pitch={5} height={36} />
-        <p class="panel__note label">
-          If the left square is pure white and the right is pure black,
-          your screen is showing this page correctly.
         </p>
       </section>
     </div>
