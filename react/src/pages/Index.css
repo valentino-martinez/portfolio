@@ -1,0 +1,158 @@
+.poster {
+  position: relative;
+  /* Display width of the wordmark. The artwork is a 4x export at
+     838x341, so every size here samples it down — which is why there
+     is no image-rendering override. */
+  --mark-w: 340px;
+  padding-top: var(--s-8);
+  /* Room for the wordmark to hang below the picture. */
+  padding-bottom: var(--s-12);
+}
+
+@media (min-width: 52rem) {
+  .poster {
+    --mark-w: 420px;
+  }
+}
+@media (min-width: 60rem) {
+  .poster {
+    --mark-w: 500px;
+  }
+}
+@media (min-width: 80rem) {
+  .poster {
+    --mark-w: 600px;
+  }
+}
+
+/* Ten columns of paper. The overlap is placed on these, so it
+   survives a reflow instead of being nudged with percentages. */
+.poster__sheet {
+  position: relative;
+  display: grid;
+  grid-template-columns: repeat(10, minmax(0, 1fr));
+  align-items: start;
+  max-width: var(--page-max);
+  margin-inline: auto;
+  padding-inline: var(--gutter);
+}
+
+.poster__figure {
+  grid-column: 4 / 11;
+  grid-row: 1;
+  justify-self: end;
+  width: 100%;
+  margin: 0;
+  z-index: 0;
+}
+
+/* Clips the zoom below, so the enlarged picture cannot paint over
+   the mat around it. */
+.poster__shot {
+  overflow: hidden;
+}
+
+.poster__shot .photo {
+  transform: scale(1.22);
+  transform-origin: 50% 42%;
+}
+
+.poster__block {
+  grid-column: 1 / 7;
+  grid-row: 1;
+  align-self: end;
+  justify-self: start;
+  margin: 0 0 calc(var(--s-12) * -1);
+  width: var(--mark-w);
+  max-width: 100%;
+  z-index: 1;
+  line-height: 0;
+}
+
+.poster__mark {
+  position: relative;
+  display: block;
+  width: 100%;
+  aspect-ratio: 838 / 341;
+  background: var(--ink);
+  color: var(--paper);
+
+  /* The notch, traced from the export's alpha: a 47x32 bite out of
+     the bottom edge, 19px in from the right corner. */
+  clip-path: polygon(
+    0 0,
+    100% 0,
+    100% 100%,
+    97.7327% 100%,
+    97.7327% 90.6158%,
+    92.1241% 90.6158%,
+    92.1241% 100%,
+    0 100%
+  );
+
+  /* Makes 1cqw = 1% of the panel's own width. Because the panel has
+     a fixed aspect ratio, that one unit measures both axes, so the
+     whole layout below is the original artwork to scale. */
+  container-type: inline-size;
+}
+
+/* 113.25px of BigBlue in an 838px panel. Derived from the export's
+   glyph advance (75.5px / 0.6667em); the cap height that predicts,
+   84.9px, is the 85px actually measured. Line box is 116px. */
+.poster__name {
+  position: absolute;
+  left: 4.564cqw;
+  top: 4.722cqw;
+  font-size: 13.514cqw;
+  line-height: 1.024;
+  white-space: nowrap;
+}
+
+/* Smooth-edged in the original, not bitmap — this line is the mono
+   stack, not the display face. Its size is fixed by the measured
+   width of the string, since the system mono varies by platform. */
+.poster__role {
+  position: absolute;
+  left: 4.564cqw;
+  top: 33.174cqw;
+  font-size: 2.864cqw;
+  line-height: 1;
+  white-space: nowrap;
+}
+
+@media (max-width: 52rem) {
+  .poster__figure {
+    grid-column: 1 / 11;
+    justify-self: start;
+  }
+  .poster__block {
+    grid-column: 1 / 10;
+    margin-bottom: calc(var(--s-8) * -1);
+  }
+}
+
+/* ---- section chrome ---------------------------------------- */
+.section__more {
+  text-decoration: none;
+  border-bottom: var(--hair);
+}
+.section__more:hover {
+  background: var(--ink);
+  color: var(--paper);
+}
+
+.closing__big {
+  font-size: var(--t-lg);
+  line-height: var(--lead-tight);
+  margin-block: var(--s-3);
+  word-break: break-word;
+}
+
+.closing__big a {
+  text-decoration: none;
+  border-bottom: var(--rule-thick) solid var(--ink);
+}
+.closing__big a:hover {
+  background: var(--ink);
+  color: var(--paper);
+}

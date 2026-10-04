@@ -1,0 +1,79 @@
+.plate {
+  position: relative;
+  border: var(--hair);
+  background: var(--paper);
+  margin: 0;
+}
+
+.plate__body {
+  position: relative;
+  overflow: hidden;
+}
+
+.plate__caption {
+  display: flex;
+  gap: var(--s-4);
+  align-items: baseline;
+  justify-content: space-between;
+  border-top: var(--hair);
+  padding: var(--s-2) var(--s-3);
+  font-size: var(--t-xs);
+  text-transform: uppercase;
+  letter-spacing: var(--track-wide);
+  line-height: 1.3;
+}
+
+.plate__text {
+  display: flex;
+  gap: var(--s-2);
+}
+
+.plate__no {
+  flex: none;
+  font-weight: 700;
+}
+
+.plate__meta {
+  flex: none;
+  text-align: right;
+}
+
+/* Registration crosses, two bars each. */
+.plate__mark {
+  position: absolute;
+  width: 9px;
+  height: 9px;
+  z-index: 2;
+  pointer-events: none;
+}
+.plate__mark::before,
+.plate__mark::after {
+  content: "";
+  position: absolute;
+  background: var(--ink);
+}
+.plate__mark::before {
+  left: 4px;
+  top: 0;
+  width: 1px;
+  height: 100%;
+}
+.plate__mark::after {
+  top: 4px;
+  left: 0;
+  height: 1px;
+  width: 100%;
+}
+.plate__mark--tl { left: -5px; top: -5px; }
+.plate__mark--tr { right: -5px; top: -5px; }
+.plate__mark--bl { left: -5px; bottom: -5px; }
+.plate__mark--br { right: -5px; bottom: -5px; }
+
+.plate--hover {
+  transition: background-color var(--dur-base) var(--ease-mech),
+    color var(--dur-base) var(--ease-mech);
+}
+.plate--hover:hover {
+  background: var(--ink);
+  color: var(--paper);
+}

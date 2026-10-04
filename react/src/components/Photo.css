@@ -1,0 +1,11 @@
+.photo {
+  display: block;
+  width: 100%;
+  height: auto;
+  filter: grayscale(1);
+}
+
+.photo--fixed {
+  aspect-ratio: var(--ratio, 3 / 2);
+  object-fit: cover;
+}

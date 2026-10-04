@@ -1,0 +1,5 @@
+/* inline-block locks the box: glyph substitution never changes the
+   string length, so the element cannot shift what sits beside it. */
+.scramble {
+  display: inline-block;
+}

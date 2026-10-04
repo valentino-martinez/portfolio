@@ -1,0 +1,248 @@
+@import "./tokens.css";
+
+/* ============================================================
+   DISPLAY FACE
+
+   BigBlue Terminal by VileR — an 8×12 console font after the IBM
+   EGA/VGA charset. © 2015 VileR, CC BY-SA 4.0. Licence text is in
+   public/fonts/LICENSE.txt.
+   ============================================================ */
+
+@font-face {
+  font-family: "BigBlue Terminal";
+  src: url("/fonts/BigBlueTerminal-437TT.ttf") format("truetype");
+  font-weight: 400;
+  font-style: normal;
+  font-display: swap;
+}
+
+/* ============================================================
+   RESET
+   ============================================================ */
+
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+
+* {
+  margin: 0;
+}
+
+html {
+  -webkit-text-size-adjust: 100%;
+  background: var(--paper);
+  transition: background-color var(--dur-base) var(--ease-mech);
+}
+
+body {
+  background: transparent;
+  color: var(--ink);
+  font-family: var(--font-mono);
+  font-size: var(--t-base);
+  line-height: var(--lead-body);
+  min-height: 100svh;
+  overflow-x: hidden;
+  -webkit-font-smoothing: antialiased;
+}
+
+img,
+svg {
+  display: block;
+  max-width: 100%;
+}
+
+button {
+  font: inherit;
+  color: inherit;
+}
+
+a {
+  color: inherit;
+}
+
+::selection {
+  background: var(--ink);
+  color: var(--paper);
+}
+
+:focus-visible {
+  outline: var(--rule-thick) solid var(--ink);
+  outline-offset: 2px;
+}
+
+/* Present to assistive tech, absent from the page. Used where a
+   decorative effect replaces the visible characters. */
+.u-sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  overflow: hidden;
+  clip-path: inset(50%);
+  white-space: nowrap;
+  border: 0;
+}
+
+.skip-link {
+  position: absolute;
+  left: var(--s-2);
+  top: -100px;
+  z-index: 10000;
+  background: var(--ink);
+  color: var(--paper);
+  padding: var(--s-2) var(--s-4);
+  text-transform: uppercase;
+  letter-spacing: var(--track-wide);
+  font-size: var(--t-xs);
+}
+.skip-link:focus {
+  top: var(--s-2);
+}
+
+/* ============================================================
+   TYPE
+   ============================================================ */
+
+.label {
+  font-size: var(--t-xs);
+  text-transform: uppercase;
+  letter-spacing: var(--track-wide);
+  line-height: 1.2;
+}
+
+.label--wide {
+  letter-spacing: var(--track-wider);
+}
+
+.num {
+  font-variant-numeric: tabular-nums;
+}
+
+/* Bitmap display face. Native cell is 8×12, so sizes are hard
+   steps at multiples of 12 — a fluid clamp() would land on a
+   fractional cell at nearly every width and soften the glyphs. */
+.title {
+  font-family: var(--font-display);
+  font-weight: 400;
+  font-synthesis: none;
+  text-transform: uppercase;
+  line-height: 1;
+  -webkit-font-smoothing: none;
+  font-smooth: never;
+}
+
+.title--sm {
+  font-size: 24px;
+}
+.title--lg {
+  font-size: 36px;
+}
+.title--xl {
+  font-size: 48px;
+}
+
+@media (min-width: 60rem) {
+  .title--lg {
+    font-size: 48px;
+  }
+  .title--xl {
+    font-size: 72px;
+  }
+}
+
+.prose {
+  max-width: var(--measure);
+}
+.prose > * + * {
+  margin-top: var(--s-4);
+}
+
+/* ============================================================
+   LAYOUT
+   ============================================================ */
+
+.page {
+  max-width: var(--page-max);
+  margin-inline: auto;
+  padding-inline: var(--gutter);
+}
+
+.section {
+  padding-block: var(--s-16);
+  position: relative;
+}
+
+.section__head {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  gap: var(--s-4);
+  margin-bottom: var(--s-8);
+  padding-bottom: var(--s-2);
+  border-bottom: var(--hair);
+  flex-wrap: wrap;
+}
+
+.section__no {
+  margin-right: 0.8em;
+}
+
+.grid {
+  display: grid;
+  gap: var(--s-8);
+  grid-template-columns: repeat(auto-fit, minmax(16rem, 1fr));
+}
+
+/* ============================================================
+   MOTION
+
+   Reveal slides only — it never fades. Fading black text in from
+   transparent walks it through every grey on the way, and this
+   palette has no grey in it.
+   ============================================================ */
+
+html.js-ready [data-reveal] {
+  transform: translateY(10px);
+  transition: transform 340ms var(--ease-mech);
+  transition-delay: var(--reveal-delay, 0ms);
+}
+
+html.js-ready [data-reveal][data-revealed] {
+  transform: none;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.001ms !important;
+    transition-duration: 0.001ms !important;
+  }
+  html.js-ready [data-reveal] {
+    transform: none;
+  }
+}
+
+/* ============================================================
+   EMPTY PLATES
+   ============================================================ */
+
+.plate-empty {
+  display: grid;
+  place-items: center;
+  width: 100%;
+  background: var(--paper);
+}
+
+.plate-empty--4x3 {
+  aspect-ratio: 4 / 3;
+}
+.plate-empty--16x9 {
+  aspect-ratio: 16 / 9;
+}
+.plate-empty--portrait {
+  aspect-ratio: 4 / 5;
+  border: var(--hair);
+}

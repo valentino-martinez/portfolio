@@ -1,0 +1,29 @@
+/* Shared chrome for the interior pages: a heading block over a
+   hairline, then one or two columns beneath it. */
+
+.head {
+  display: grid;
+  gap: var(--s-3);
+  padding-bottom: var(--s-4);
+  margin-bottom: var(--s-8);
+  border-bottom: var(--hair);
+}
+
+.layout {
+  display: grid;
+  gap: var(--s-8);
+}
+
+@media (min-width: 60rem) {
+  .layout {
+    grid-template-columns: 1.3fr 1fr;
+    gap: var(--s-16);
+    align-items: start;
+  }
+}
+
+.card__summary {
+  margin-top: var(--s-3);
+  font-size: var(--t-sm);
+  line-height: var(--lead-body);
+}

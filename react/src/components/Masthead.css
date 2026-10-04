@@ -1,0 +1,122 @@
+.mast {
+  position: sticky;
+  top: 0;
+  z-index: var(--z-nav);
+  background: var(--paper);
+  border-bottom: var(--hair);
+}
+
+.mast__bar {
+  display: flex;
+  align-items: center;
+  gap: var(--s-6);
+  min-height: 44px;
+}
+
+.mast__mark {
+  flex: none;
+  display: flex;
+  align-items: center;
+  text-decoration: none;
+  padding-right: var(--s-4);
+  border-right: var(--hair);
+  align-self: stretch;
+}
+
+.mast__wordmark {
+  font-size: 24px;
+}
+
+.mast__nav {
+  flex: 1 1 auto;
+  min-width: 0;
+  overflow-x: auto;
+  scrollbar-width: none;
+}
+.mast__nav::-webkit-scrollbar {
+  display: none;
+}
+
+.mast__nav ul {
+  display: flex;
+  list-style: none;
+  padding: 0;
+  margin: 0;
+}
+
+.mast__link {
+  display: inline-flex;
+  align-items: baseline;
+  gap: 0.4em;
+  padding: var(--s-3);
+  text-decoration: none;
+  font-size: var(--t-xs);
+  text-transform: uppercase;
+  letter-spacing: var(--track-wide);
+  white-space: nowrap;
+  transition: background-color var(--dur-fast) var(--ease-mech),
+    color var(--dur-fast) var(--ease-mech);
+}
+
+.mast__idx {
+  font-size: 0.85em;
+}
+
+.mast__link:hover,
+.mast__link:focus-visible,
+.mast__link.active {
+  background: var(--ink);
+  color: var(--paper);
+}
+
+.mast__instruments {
+  flex: none;
+  display: flex;
+  align-items: center;
+  align-self: stretch;
+}
+
+.mast__invert {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5em;
+  background: none;
+  border: var(--hair);
+  padding: 3px var(--s-2);
+  cursor: pointer;
+  font-size: var(--t-xs);
+  text-transform: uppercase;
+  letter-spacing: var(--track-wide);
+  transition: background-color var(--dur-fast) var(--ease-mech),
+    color var(--dur-fast) var(--ease-mech);
+}
+.mast__invert:hover {
+  background: var(--ink);
+  color: var(--paper);
+}
+
+/* Half-filled square: the universal invert glyph. */
+.mast__swatch {
+  width: 9px;
+  height: 9px;
+  border: 1px solid currentColor;
+  background: linear-gradient(135deg, currentColor 0 50%, transparent 50% 100%);
+}
+
+@media (max-width: 40rem) {
+  .mast__bar {
+    flex-wrap: wrap;
+    gap: 0;
+    padding-block: var(--s-2);
+  }
+  .mast__mark {
+    border-right: 0;
+    flex: 1 1 auto;
+  }
+  .mast__nav {
+    flex: 1 0 100%;
+    order: 3;
+    border-top: var(--hair);
+    margin-top: var(--s-2);
+  }
+}

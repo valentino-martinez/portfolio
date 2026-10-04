@@ -1,0 +1,35 @@
+<!doctype html>
+<html lang="en" data-invert="off">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Valentino Martinez</title>
+    <meta name="color-scheme" content="light dark" />
+
+    <!-- Runs before first paint, so the page never flashes the wrong
+         polarity. Kept inline and dependency-free on purpose. -->
+    <script>
+      (function () {
+        var root = document.documentElement;
+        root.classList.add("js-ready");
+        try {
+          var saved = localStorage.getItem("ap:invert");
+          if (saved === "on" || saved === "off") {
+            root.setAttribute("data-invert", saved);
+            return;
+          }
+        } catch (e) {
+          /* storage blocked; fall through to the system preference */
+        }
+        var dark =
+          window.matchMedia &&
+          window.matchMedia("(prefers-color-scheme: dark)").matches;
+        root.setAttribute("data-invert", dark ? "on" : "off");
+      })();
+    </script>
+  </head>
+  <body>
+    <div id="root"></div>
+    <script type="module" src="/src/main.tsx"></script>
+  </body>
+</html>
