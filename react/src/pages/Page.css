@@ -27,3 +27,20 @@
   font-size: var(--t-sm);
   line-height: var(--lead-body);
 }
+
+/* Licence credit. Deliberately quiet: a hairline, one line of small
+   caps, and nothing else. */
+.credit {
+  margin-top: var(--s-16);
+  padding-top: var(--s-3);
+  border-top: var(--hair);
+}
+
+.credit a {
+  text-decoration: none;
+  border-bottom: var(--hair);
+}
+.credit a:hover {
+  background: var(--ink);
+  color: var(--paper);
+}

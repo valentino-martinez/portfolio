@@ -39,6 +39,29 @@ export function About() {
           </Plate>
         </Reveal>
       </div>
+
+      {/* The display face is CC BY-SA 4.0, which requires the credit
+          to travel with the work wherever it is published. One line,
+          at the foot of one page — the licence is satisfied and the
+          page is not cluttered. */}
+      <footer className="credit label">
+        Set in{" "}
+        <a
+          href="https://int10h.org/blog/2015/12/bigblue-terminal-oldschool-typeface/"
+          rel="noopener noreferrer"
+          target="_blank"
+        >
+          BigBlue Terminal
+        </a>{" "}
+        by VileR,{" "}
+        <a
+          href="https://creativecommons.org/licenses/by-sa/4.0/"
+          rel="license noopener noreferrer"
+          target="_blank"
+        >
+          CC BY-SA 4.0
+        </a>
+      </footer>
     </article>
   );
 }
