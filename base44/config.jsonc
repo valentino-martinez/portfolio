@@ -1,0 +1,23 @@
+{
+  // The name must match the Base44 app this repo is linked to.
+  // Change it if your app is called something else.
+  "name": "portfolio",
+  "description": "Valentino Martinez — design and computer science portfolio.",
+
+  // Public: anyone with the URL can view it, no sign-in.
+  "visibility": "public",
+
+  // Frontend only. There is no backend in this project — no
+  // entities, functions, connectors or auth — so those sections are
+  // deliberately absent.
+  //
+  // The React app lives in react/, not at the repo root, because the
+  // old Astro project is still sitting there. Every path below is
+  // resolved from the project root, hence the --prefix.
+  "site": {
+    "installCommand": "npm --prefix react ci",
+    "buildCommand": "npm --prefix react run build",
+    "outputDirectory": "./react/dist",
+    "serveCommand": "npm --prefix react run dev"
+  }
+}
